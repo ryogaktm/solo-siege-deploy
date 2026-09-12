@@ -682,7 +682,7 @@
       <svg viewBox="0 0 100 100" fill="none" stroke="#e2c06a" stroke-width="4"><path d="M50 8 L88 28 L88 55 C88 78 70 90 50 96 C30 90 12 78 12 55 L12 28 Z"/><path d="M50 8 L50 96" stroke-width="2" opacity=".5"/></svg>
     </div>
     <div class="title-logo">SOLO SIEGE</div>
-    <div class="title-sub">六つの旗</div>
+    <div class="title-sub">ソリティアで魔王を倒そう</div>
     <div class="title-highscore">ハイスコア<br><b id="titleHighScore">0</b></div>
     <button class="btn title-startbtn" id="titleStartBtn">はじめる</button>
     <button class="btn ghost title-howtobtn" id="titleHowtoBtn">遊び方</button>
@@ -3426,6 +3426,7 @@ document.getElementById('menuToTitleBtn').onclick=()=>{
     gameEnded=true;
     document.getElementById('appRoot').style.display='none';
     document.getElementById('charScreen').style.display='none';
+    document.getElementById('titleHighScore').textContent=loadOverallHighScore();
     document.getElementById('titleScreen').style.display='flex';
   });
 };
@@ -3532,6 +3533,7 @@ document.addEventListener('click', ()=>{
 updateSoundButtons();
 document.getElementById('charBackBtn').onclick=()=>{
   document.getElementById('charScreen').style.display='none';
+  document.getElementById('titleHighScore').textContent=loadOverallHighScore();
   document.getElementById('titleScreen').style.display='flex';
 };
 document.getElementById('titleHowtoBtn').onclick=()=>{
