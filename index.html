@@ -1122,7 +1122,7 @@ const TACTIC_EXTRA = {
   guidance:'発動すると、まず移動元の旗をタップ。旗に2枚ある場合はどちらを動かすか選べる（1枚しかない場合は自動でそれが選ばれる）。最後に移動先の旗をタップすれば、そのカードを別の旗へ移し替えられます。ヘッダーの山札・墓地アイコンをタップすれば、移動させずにそのまま捨てることもできます。',
   inspire:'発動すると、このカードを除く今の手札にある部隊・力の装備の数字がすべて+3されます（最大10まで）。強い役や換装条件を狙いやすくなります。',
   duplicate:'発動後、複製したい手札のカードをタップ。そのカードのコピーが手札に加わります（複製もとのカードはそのまま残ります）。',
-  fusion:'発動後、手札の部隊カードを2枚タップして選択。高い方は必ず10になり、低い方はその上がった分だけさらに下がります（例：4と8→2と10、4と7→1と10）。マーク（色）はそれぞれ元のカードのまま引き継がれます。',
+  fusion:'発動後、手札の部隊カードを2枚タップして選択。合計値を保ったまま、高い方は必ず10になり、低い方はその余り（合計−10）になります（例：4と8→2と10、6と8→4と10）。余りが1未満になる場合は、10のカード1枚だけにまとまります（例：2と8→10が1枚）。マーク（色）は元のカードから引き継がれます。',
 };
 
 /* ---- monster cards ---- */
@@ -1178,7 +1178,7 @@ function loadOverallHighScore(){
 let stageIndex=0, waveAttempt=1, bossHp=0, displayedBossHp=0, victory=false, waveAdvancing=false, freeShuffles=0, rewardPicksRemaining=0, pendingRewardCards=[], handSlotBonus=0;
 const TURN_TIME_LIMIT_BASE=15, TURN_TIME_LIMIT_MIN=0.1;
 let totalWaves=0, immortalKills=0, carryDamage=0, comboTimeBonus=0;
-const IMMORTAL_KILLS_TO_WIN=5;
+const IMMORTAL_KILLS_TO_WIN=2;
 function currentTimeLimit(){ return Math.max(TURN_TIME_LIMIT_MIN, TURN_TIME_LIMIT_BASE - totalWaves + comboTimeBonus); }
 let timeLeft=TURN_TIME_LIMIT_BASE, timerInterval=null, anyDragActive=false;
 let uidN=1; const uid=()=>'u'+(uidN++);
@@ -2063,13 +2063,21 @@ function resolveFusion(){
   const used=hand[usedIdx];
   const lo = cardA.value<=cardB.value ? cardA : cardB;
   const hi = cardA.value<=cardB.value ? cardB : cardA;
-  const delta=10-hi.value;
-  const newHiVal=10;
-  const newLoVal=Math.max(1, lo.value-delta);
-  const newLo={kind:'troop', color:lo.color, altColor:lo.altColor, mixed:lo.mixed, value:newLoVal, uid:lo.uid};
-  const newHi={kind:'troop', color:hi.color, altColor:hi.altColor, mixed:hi.mixed, value:newHiVal, uid:hi.uid};
-  const idxLo=hand.indexOf(lo), idxHi=hand.indexOf(hi);
-  hand[idxLo]=newLo; hand[idxHi]=newHi;
+  const overflow = lo.value + hi.value - 10;
+  const newHi={kind:'troop', color:hi.color, altColor:hi.altColor, mixed:hi.mixed, value:10, uid:hi.uid};
+  const idxHi=hand.indexOf(hi);
+  hand[idxHi]=newHi;
+  let hintMsg;
+  if(overflow>=1){
+    const newLo={kind:'troop', color:lo.color, altColor:lo.altColor, mixed:lo.mixed, value:overflow, uid:lo.uid};
+    const idxLo=hand.indexOf(lo);
+    hand[idxLo]=newLo;
+    hintMsg=`融合！${CNAME[lo.color]}${overflow}と${CNAME[hi.color]}10に分裂した。`;
+  } else {
+    hand.splice(hand.indexOf(lo),1);
+    graveyard.push(lo);
+    hintMsg=`融合！余りが出ず、${CNAME[hi.color]}10、1枚にまとまった。`;
+  }
   hand.splice(hand.indexOf(used),1);
   graveyard.push(used);
   pending=null;
@@ -2077,7 +2085,7 @@ function resolveFusion(){
   const refilled=autoRefill(1);
   render(); layoutHand(false, refilled[0]&&refilled[0].uid, refilled[0]&&refilled[0].fromRect);
   busy=false; endCheck(); render();
-  hint(`融合！${CNAME[lo.color]}${newLoVal}と${CNAME[hi.color]}${newHiVal}に分裂した。`);
+  hint(hintMsg);
 }
 function cancelPending(){
   if(!pending || pending.type==='discard' || pending.type==='rehire') return;
@@ -2810,7 +2818,7 @@ function buildHowtoPage(){
     <p style="margin-top:8px;"><b style="color:var(--gold)">ボスのHPが残っていれば同じステージのままWAVEだけ進み、手札はそのまま引き継がれる</b>。<b style="color:var(--gold)">ボスを倒すと次のステージへ進み、そこで初めて手札も一新</b>される。</p>
     <p style="margin-top:8px;">ステージが進むごとに敵は強くなり、<b style="color:var(--danger)">制限時間はWAVEを重ねるごとに1秒ずつ短くなり続ける</b>（ステージが変わっても戻らない、下限0.1秒）。</p>
     <p style="margin-top:8px;"><b style="color:var(--gold)">唯一の対抗手段がコンボ</b>：象徴の色が同じ旗を2つ以上つなげると、その場で制限時間が+0.25秒される（ヘッダーの時計の秒数に反映）。<b style="color:#f2a0cc">長く生き延びるにはコンボがほぼ必須</b>になる。</p>
-    <p style="margin-top:8px;">最後に待つ「不死身の魔王」は、<b style="color:#f2d97a">5回撃破するとついに完全勝利</b>——村は護られる。それまでは何度倒しても復活し続ける。</p>
+    <p style="margin-top:8px;">最後に待つ「不死身の魔王」は、<b style="color:#f2d97a">2回撃破するとついに完全勝利</b>——村は護られる。それまでは何度倒しても復活し続ける。</p>
     <p style="margin-top:8px;"><b style="color:var(--danger)">ヘッダーのタイムバーが0になった瞬間にゲームオーバー</b>になるので、考えすぎず手を動かそう。</p>
     <p style="margin-top:8px;">カードを1枚使うと自動で1枚補充される。山札・大山札・墓地はヘッダーのカードアイコンをタップすると中身の一覧が見られる。</p>
   </div>`);
@@ -2844,9 +2852,9 @@ function buildHowtoPage(){
 function addVictoryDemo(container){
   const box=document.createElement('div');
   box.style.cssText='margin-top:10px; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; border:1px solid var(--gold-3); border-radius:9px; padding:10px;';
-  box.innerHTML=`<span style="font-size:12px; color:var(--cream-2);">不死身の魔王</span><span style="color:var(--danger); font-weight:800; font-size:13px;">×5撃破</span><span style="color:var(--gold-2); font-weight:800;">→</span><span class="gradebig victory" style="font-size:17px;">勝った！</span>`;
+  box.innerHTML=`<span style="font-size:12px; color:var(--cream-2);">不死身の魔王</span><span style="color:var(--danger); font-weight:800; font-size:13px;">×2撃破</span><span style="color:var(--gold-2); font-weight:800;">→</span><span class="gradebig victory" style="font-size:17px;">勝った！</span>`;
   container.appendChild(box);
-  const cap=document.createElement('p'); cap.style.cssText='font-size:11.5px; color:var(--cream-2); margin-top:6px; text-align:center;'; cap.textContent='不死身の魔王だけは、5回撃破するとついに息絶える。そこで初めてゲームクリアとなる。';
+  const cap=document.createElement('p'); cap.style.cssText='font-size:11.5px; color:var(--cream-2); margin-top:6px; text-align:center;'; cap.textContent='不死身の魔王だけは、2回撃破するとついに息絶える。そこで初めてゲームクリアとなる。';
   container.appendChild(cap);
 }
 function addBigResultDemo(container, color, total, name, grade, caption){
