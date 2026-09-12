@@ -1,0 +1,3546 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ソロ・シージ ― 九つの旗</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --felt-1:#1f5a44; --felt-2:#123a2b; --felt-3:#0a2119;
+    --rail:#4a2f1a; --rail-hi:#7a5231;
+    --gold:#e2c06a; --gold-2:#b8923e; --gold-3:#7a5f28;
+    --ink:#1b1a17; --cream:#f5edd9; --cream-2:#e8dcc0;
+    --glow:#8ff0c4; --danger:#ff6b4a;
+    --card-w:80px; --card-h:80px;
+    --mini-w:58px; --mini-h:58px; --slot-w:78px; --slot-h:78px;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  html,body{ margin:0; height:100%; overflow:hidden; }
+  body{
+    font-family:'Noto Sans JP',sans-serif; color:var(--cream);
+    background:
+      radial-gradient(ellipse at 50% 30%, var(--felt-1) 0%, var(--felt-2) 55%, var(--felt-3) 100%);
+    background-attachment:fixed;
+    position:relative; height:100%;
+    padding-bottom:0; user-select:none;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255,255,255,.012) 0 2px, transparent 2px 4px),
+      repeating-linear-gradient(-45deg, rgba(0,0,0,.05) 0 1px, transparent 1px 3px);
+  }
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    box-shadow: inset 0 0 120px 40px rgba(0,0,0,.55);
+  }
+  .app{ position:relative; z-index:1; max-width:460px; margin:0 auto; padding:6px 12px 150px; box-sizing:border-box; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
+  .title-screen{
+    position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 30%, #1a2a20 0%, #0d1810 60%, #060a08 100%);
+  }
+  .title-inner{ text-align:center; padding:20px; }
+  .title-emblem{ width:90px; height:90px; margin:0 auto 14px; filter:drop-shadow(0 0 14px rgba(226,192,106,.5)); }
+  .title-logo{ font-family:'Cinzel',serif; font-size:36px; font-weight:900; letter-spacing:.08em; color:var(--gold); text-shadow:0 0 20px rgba(226,192,106,.5); }
+  .title-sub{ font-size:14px; color:var(--cream-2); letter-spacing:.15em; margin-top:2px; margin-bottom:22px; }
+  .title-highscore{ font-size:12px; color:var(--cream-2); opacity:.85; margin-bottom:26px; line-height:1.6; }
+  .title-highscore b{ font-family:'Cinzel',serif; font-size:26px; color:var(--gold); display:block; }
+  .char-inner{ width:100%; max-width:420px; padding:18px 14px; text-align:center; max-height:100dvh; overflow-y:auto; }
+  .char-story{ font-size:14px; line-height:1.7; color:var(--cream); font-weight:700; margin-bottom:10px; }
+  .char-prompt{ font-size:12px; color:var(--gold); letter-spacing:.08em; margin-bottom:14px; }
+  .char-list{ display:flex; flex-direction:column; gap:10px; }
+  .char-card{
+    position:relative; text-align:left; background:rgba(0,0,0,.35); border:1px solid rgba(226,192,106,.3); border-radius:12px;
+    padding:12px 14px; cursor:pointer; color:var(--cream-2); font-family:'Noto Sans JP',sans-serif;
+    transition:transform .12s, border-color .12s;
+  }
+  .char-card:active{ transform:scale(.98); border-color:var(--gold); }
+  .char-hs{ position:absolute; top:10px; right:12px; font-size:10.5px; color:var(--gold); opacity:.85; font-family:'Cinzel',serif; }
+  .char-name{ font-size:16px; font-weight:800; color:var(--gold); }
+  .char-name small{ font-size:11px; color:var(--cream-2); font-weight:400; margin-left:8px; }
+  .char-desc{ font-size:11.5px; line-height:1.55; margin-top:4px; }
+  .char-spec{ font-size:10.5px; margin-top:6px; color:var(--glow); opacity:.9; }
+  .title-flagcount{ margin-bottom:20px; }
+  .title-flagcount-label{ font-size:10.5px; color:var(--cream-2); opacity:.7; margin-bottom:6px; }
+  .title-flagcount-row{ display:flex; gap:8px; justify-content:center; }
+  .flagcount-btn{
+    width:38px; height:38px; border-radius:50%; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.2);
+    color:var(--cream-2); font-family:'Cinzel',serif; font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .flagcount-btn.active{ background:rgba(226,192,106,.25); border-color:var(--gold); color:var(--gold); }
+  .title-startbtn{ display:block; width:220px; margin:0 auto 10px; font-size:16px; padding:14px; }
+  .title-howtobtn{ display:block; width:220px; margin:0 auto; }
+  .title-sound-row{ display:flex; gap:10px; justify-content:center; margin-top:16px; }
+
+  /* ---------- header ---------- */
+  .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; flex:0 0 auto; gap:8px; }
+  .brand{ font-family:'Cinzel',serif; font-weight:800; font-size:15px; letter-spacing:.14em; color:var(--gold);
+    text-shadow:0 1px 0 rgba(0,0,0,.6); }
+  .brand small{ display:block; font-family:'Shippori Mincho',serif; font-size:10px; letter-spacing:.2em; color:var(--cream-2); opacity:.75; }
+  .iconbtn{ width:30px; height:30px; border-radius:50%; border:1px solid var(--gold-3); background:rgba(0,0,0,.35);
+    color:var(--gold); font-family:'Cinzel',serif; font-weight:800; cursor:pointer; font-size:14px; flex:0 0 auto; }
+  .topbar-btns{ display:flex; gap:6px; align-items:center; }
+  .sound-btn{ font-size:13px; opacity:1; transition:opacity .15s; }
+  .sound-btn.muted{ opacity:.35; }
+  .char-badge{ display:flex; flex-direction:column; line-height:1.3; }
+  .char-badge-name{ font-size:13.5px; font-weight:800; color:var(--gold); font-family:'Noto Sans JP',sans-serif; }
+  .char-badge-score{ font-size:10.5px; color:var(--cream-2); opacity:.8; }
+  .char-badge-score b{ color:var(--gold); font-family:'Cinzel',serif; }
+  .menu-panel{
+    position:absolute; right:12px; top:44px; z-index:60; flex-direction:column; gap:6px;
+    background:rgba(10,18,12,.96); border:1px solid rgba(226,192,106,.35); border-radius:10px;
+    padding:8px; box-shadow:0 8px 24px rgba(0,0,0,.6);
+  }
+  .menu-item{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); border-radius:8px;
+    color:var(--cream-2); font-size:12px; padding:8px 12px; text-align:left; cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif; white-space:nowrap;
+  }
+  .menu-item.muted{ opacity:.5; }
+
+  .wavebar{ text-align:center; margin-bottom:4px; flex:0 0 auto; }
+  .boss-hp-row{ display:flex; align-items:center; gap:8px; margin-top:4px; }
+  .boss-hp-bar{ flex:1; height:10px; background:rgba(0,0,0,.45); border-radius:5px; overflow:hidden; border:1px solid rgba(224,90,74,.35); }
+  .boss-attack-fly{
+    position:fixed; z-index:300; transform:translate(-50%,-50%);
+    pointer-events:none; filter:drop-shadow(0 0 8px rgba(255,180,60,.9));
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .baf-sword{ font-size:48px; }
+  .baf-dmg{
+    font-family:'Cinzel',serif; font-size:26px; font-weight:900; color:#fff2c0;
+    text-shadow:0 0 8px rgba(0,0,0,.8), 0 0 14px rgba(255,180,60,.9);
+  }
+  @keyframes app-shake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-8px) rotate(-.5deg); }
+    40%{ transform:translateX(7px) rotate(.5deg); }
+    60%{ transform:translateX(-5px); }
+    80%{ transform:translateX(4px); }
+  }
+  .app.shake{ animation:app-shake .38s ease; }
+  .defeat-flash{
+    position:fixed; inset:0; z-index:250; pointer-events:none;
+    background:radial-gradient(ellipse at center, rgba(180,30,20,.5) 0%, rgba(120,10,10,.72) 55%, rgba(20,0,0,.88) 100%);
+    opacity:0; transition:opacity .3s ease;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .defeat-flash.show{ opacity:1; }
+  .defeat-flash.fade{ opacity:0; }
+  .defeat-text{
+    font-family:'Cinzel',serif; font-weight:800; font-size:52px; color:#ff6a5a;
+    text-shadow:0 0 30px rgba(255,60,40,.9), 0 4px 12px rgba(0,0,0,.8);
+    letter-spacing:.08em; opacity:0; transform:scale(0.7);
+    animation:defeat-text-in .5s ease forwards .1s;
+  }
+  @keyframes defeat-text-in{ 0%{ opacity:0; transform:scale(0.6) rotate(-4deg); } 60%{ opacity:1; transform:scale(1.12) rotate(1deg); } 100%{ opacity:1; transform:scale(1) rotate(0); } }
+  .final-boss-flash{
+    position:fixed; inset:0; z-index:260; pointer-events:none; overflow:hidden;
+    background:radial-gradient(ellipse at center, rgba(255,215,120,.55) 0%, rgba(150,60,180,.6) 55%, rgba(10,5,20,.92) 100%);
+    opacity:0; transition:opacity .35s ease;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .final-boss-flash.show{ opacity:1; }
+  .final-boss-flash.fade{ opacity:0; }
+  .final-boss-burst{
+    position:absolute; width:20px; height:20px; border-radius:50%;
+    background:radial-gradient(circle, #fff7d6 0%, #ffd76a 35%, rgba(255,120,60,0) 70%);
+    opacity:0; animation:final-boss-burst-anim 1.1s ease-out forwards;
+  }
+  @keyframes final-boss-burst-anim{
+    0%{ opacity:1; transform:scale(0); }
+    40%{ opacity:1; transform:scale(28); }
+    100%{ opacity:0; transform:scale(42); }
+  }
+  .final-boss-text{
+    position:relative; font-family:'Cinzel',serif; font-weight:800; font-size:40px; color:#fff3d0;
+    text-shadow:0 0 30px rgba(255,220,140,.9), 0 4px 14px rgba(0,0,0,.8);
+    letter-spacing:.05em; text-align:center; opacity:0; transform:scale(0.7);
+    animation:defeat-text-in .6s ease forwards .25s;
+  }
+  .boss-hp-fill{ height:100%; width:100%; background:linear-gradient(90deg, #e05a4a, #f2a06a); transition:width .4s ease; }
+  .boss-hp-num{ font-size:11px; color:var(--cream-2); white-space:nowrap; font-family:'Cinzel',serif; }
+  .boss-hp-num b{ color:var(--danger); font-size:13px; }
+  .wave-title{ font-family:'Cinzel',serif; font-weight:800; font-size:14px; color:#f0a8d0; letter-spacing:.03em;
+    text-shadow:0 0 10px rgba(224,106,168,.35); }
+  .wave-threshold{ font-size:11px; color:var(--cream-2); margin-top:2px; }
+  .wave-threshold b{ color:var(--danger); font-family:'Cinzel',serif; font-size:13px; }
+
+  .timerbar{ height:6px; background:rgba(0,0,0,.4); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+  .timerrow{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .clock-icon{ font-size:16px; flex:0 0 auto; }
+  .clock-seconds{ font-size:11px; font-family:'Cinzel',serif; font-weight:800; color:var(--cream-2); flex:0 0 auto; min-width:2.6em; }
+  .clock-seconds.boosted{ color:#8ff0c4; text-shadow:0 0 6px rgba(143,240,196,.7); }
+  .giveup-btn{
+    flex:1; background:rgba(224,90,74,.18); border:1px solid rgba(224,90,74,.6);
+    color:#ffcfc2; font-size:13px; font-weight:800; padding:10px 9px; border-radius:14px;
+    cursor:pointer; white-space:nowrap; font-family:'Noto Sans JP',sans-serif;
+  }
+  .giveup-btn:active{ background:rgba(224,90,74,.35); }
+  .shuffle-btn{
+    flex:1; background:rgba(143,240,196,.18); border:1px solid rgba(143,240,196,.65);
+    color:#c8ffe4; font-size:13px; font-weight:800; padding:10px 9px; border-radius:14px;
+    cursor:pointer; white-space:nowrap; font-family:'Noto Sans JP',sans-serif;
+  }
+  .shuffle-btn:active{ background:rgba(143,240,196,.35); }
+  .shuffle-btn:disabled{ opacity:.35; cursor:default; }
+  .shuffle-btn.urgent-glow{ animation:choosable-pulse 1s ease-in-out infinite; box-shadow:0 0 0 2px var(--glow), 0 0 16px rgba(143,240,196,.8); }
+  .actionrow{ display:flex; gap:8px; margin-bottom:4px; }
+  .timerrow .timerbar{ flex:1; margin-bottom:0; }
+  .timerfill{ height:100%; width:100%; background:linear-gradient(90deg, var(--glow), var(--gold)); transition:width .12s linear, background .3s; }
+  .timerfill.warn{ background:linear-gradient(90deg, var(--danger), #ff9a6a); box-shadow:0 0 10px rgba(224,90,74,.9); animation:timer-pulse .5s ease-in-out infinite; }
+  @keyframes timer-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.5; } }
+  .timerbar.urgent{ height:9px; box-shadow:0 0 0 1px rgba(224,90,74,.7), 0 0 12px rgba(224,90,74,.5); }
+  .urgency-vignette{ position:fixed; inset:0; pointer-events:none; z-index:150; display:none; }
+  .urgency-vignette.active{ display:block; animation:vignette-pulse .6s ease-in-out infinite; }
+  .urgency-vignette.critical{ animation-duration:.3s; }
+  @keyframes vignette-pulse{
+    0%,100%{ box-shadow:inset 0 0 60px 20px rgba(224,90,74,.35); }
+    50%{ box-shadow:inset 0 0 100px 45px rgba(224,90,74,.7); }
+  }
+  .countdown-big{
+    position:fixed; top:42%; left:50%; transform:translate(-50%,-50%);
+    font-family:'Cinzel',serif; font-size:130px; font-weight:900; color:rgba(255,120,100,.6);
+    text-shadow:0 0 30px rgba(224,90,74,.9), 0 0 60px rgba(224,90,74,.6);
+    pointer-events:none; z-index:151; display:none; line-height:1;
+  }
+  .countdown-big.show{ display:block; animation:countdown-pop .45s ease-out; }
+  @keyframes countdown-pop{ 0%{ transform:translate(-50%,-50%) scale(1.7); opacity:0; } 100%{ transform:translate(-50%,-50%) scale(1); opacity:1; } }
+
+  .statsrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px; flex:0 0 auto; }
+  .powerstats{ text-align:left; margin-bottom:0; flex:1 1 auto; min-width:0; }
+  .power-main{ display:flex; align-items:baseline; justify-content:flex-start; gap:8px; }
+  .power-label{ font-size:11px; color:var(--cream-2); letter-spacing:.12em; }
+  .power-num{ font-family:'Cinzel',serif; font-weight:800; font-size:27px; color:var(--gold); transition:color .2s, transform .15s; }
+  .power-num.bump{ color:#fff; transform:scale(1.15); }
+  .power-sub{ font-size:10.5px; color:var(--cream-2); opacity:.85; margin-top:2px; }
+  .power-charname{ font-size:11px; color:var(--gold); opacity:.85; font-family:'Noto Sans JP',sans-serif; align-self:flex-end; margin-left:2px; }
+  .power-sub b{ color:var(--gold); font-family:'Cinzel',serif; }
+  .power-sub .sep{ opacity:.4; }
+
+  .pilerow{ display:flex; justify-content:flex-end; gap:6px; margin-bottom:0; flex:0 0 auto; opacity:.55; transition:opacity .2s; }
+  .pilerow:active, .pilerow:hover, .pilerow.force-visible{ opacity:1; }
+  .pilebtn{ position:relative; background:none; border:none; cursor:pointer; padding:4px; }
+  .pilebtn.pile-choosable{ animation:choosable-pulse 1s ease-in-out infinite; }
+  .pilebtn.pile-choosable .cardpile{ box-shadow:0 0 0 2px var(--glow), 0 0 14px rgba(143,240,196,.7); border-radius:8px; }
+  .pilebtn.pile-hover{ animation:none; transform:scale(1.18); }
+  .pilebtn.pile-hover .cardpile{ box-shadow:0 0 0 3px var(--glow), 0 0 22px rgba(143,240,196,1); }
+  .cardpile{ position:relative; width:var(--mini-w); height:var(--mini-h); }
+  .pilerow .cardpile{ width:28px; height:28px; }
+  .pilerow .pcard.mini{ width:36px; height:36px; border-radius:5px; }
+  .pilerow .pilecount{ font-size:8px; padding:1px 4px; bottom:-4px; right:-5px; }
+  .cardpile .pcard{ position:absolute; inset:0; }
+  .cardpile .pcard:nth-child(1){ transform:translate(0,0); }
+  .cardpile .pcard:nth-child(2){ transform:translate(3px,-3px); }
+  .cardpile .pcard:nth-child(3){ transform:translate(6px,-6px); }
+  .pilecount{
+    position:absolute; bottom:-6px; right:-8px; z-index:2;
+    background:var(--gold); color:#201808; font-size:10px; font-weight:800;
+    border-radius:10px; padding:1px 6px; box-shadow:0 2px 4px rgba(0,0,0,.4); font-family:'Cinzel',serif;
+  }
+  .pcard.back{ background:linear-gradient(160deg,#1d2a4a,#0d1428); }
+  .pcard.back::before{ content:""; position:absolute; inset:4px; border:1px solid rgba(226,192,106,.5); border-radius:4px; }
+  .pcard.back.grave{ background:linear-gradient(160deg,#3a1414,#160505); }
+  .pcard.back.grave::before{ border-color:rgba(240,150,120,.5); }
+  .pcard.back.grand{ background:linear-gradient(160deg,#3a2e14,#1a1406); }
+  .pcard.back.grand::before{ border-color:rgba(226,192,106,.7); }
+  .pcard.back.exclude{ background:linear-gradient(160deg,#2a2a2a,#0a0a0a); }
+  .pcard.back.exclude::before{ border-color:rgba(150,150,150,.5); }
+
+  /* ---------- telop ---------- */
+  .telops{ display:flex; flex-direction:column; gap:6px; margin-bottom:4px; flex:0 0 auto; }
+  .telop{
+    display:flex; align-items:center; gap:8px; padding:4px 10px; border-radius:7px;
+    background:rgba(0,0,0,.55); border:1px solid rgba(226,192,106,.25);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06); min-height:40px;
+  }
+  .telop b{ flex:0 0 auto; font-family:'Cinzel',serif; font-size:10px; letter-spacing:.1em; padding:2px 7px; border-radius:4px; color:#201808; background:var(--glow); }
+  .telop span{ font-size:11.5px; color:#eafff2; font-weight:700; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .cancelbtn{
+    margin-left:auto; flex:0 0 auto; width:22px; height:22px; border-radius:50%;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.3);
+    color:var(--cream-2); font-size:12px; cursor:pointer; line-height:1;
+  }
+  .confirmbtn{
+    margin-left:auto; flex:0 0 auto; padding:4px 10px; border-radius:12px;
+    background:rgba(143,240,196,.25); border:1px solid rgba(143,240,196,.6);
+    color:var(--glow); font-size:11px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP',sans-serif;
+  }
+  .confirmbtn + .cancelbtn{ margin-left:6px; }
+
+  /* ---------- card ---------- */
+  .pcard{
+    position:relative; width:var(--card-w); height:var(--card-h); border-radius:9px;
+    background:linear-gradient(160deg, #fbf5e6 0%, var(--cream) 45%, var(--cream-2) 100%);
+    box-shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 3px 6px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.35);
+    color:var(--ink); overflow:hidden; font-family:'Cinzel',serif;
+  }
+  .pcard::before{ content:""; position:absolute; inset:4px; border-radius:6px; border:1px solid rgba(0,0,0,.14); pointer-events:none; }
+  .pcard.mini{ width:var(--mini-w); height:var(--mini-h); border-radius:7px; }
+  .pcard .corner{ position:absolute; top:5px; left:6px; font-size:17px; font-weight:800; line-height:1; display:flex; align-items:center; gap:2px; }
+  .pcard .corner .ic{ font-size:.7em; opacity:.8; }
+  .pcard.mini .corner{ font-size:13px; top:3px; left:4px; }
+  .pcard .corner.br{ top:auto; left:auto; bottom:5px; right:6px; transform:rotate(180deg); }
+  .pcard.mini .corner.br{ top:auto; left:auto; bottom:3px; right:4px; }
+  .pcard .emblem{ position:absolute; left:50%; top:52%; transform:translate(-50%,-50%); width:32px; height:32px; }
+  .mixed-emblem{ position:relative; }
+  .mixed-emblem svg{ position:absolute; inset:0; width:100% !important; height:100%; }
+  .mixed-emblem svg.left-half{ clip-path:inset(0 50% 0 0); }
+  .mixed-emblem svg.right-half{ clip-path:inset(0 0 0 50%); }
+  .pcard.mini .emblem{ width:23px; height:23px; }
+  .pcard.big .emblem{ width:80px; height:80px; }
+  .pcard .emblem svg{ width:100%; height:100%; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  .pcard .name{ position:absolute; bottom:3px; left:0; right:0; text-align:center; font-family:'Noto Sans JP',sans-serif; font-size:8px; font-weight:700; letter-spacing:.04em; opacity:.85; }
+  .pcard.mini .name{ display:none; }
+
+  .red .corner, .red .name{ color:#b23223; } .orange .corner, .orange .name{ color:#c8701f; }
+  .yellow .corner, .yellow .name{ color:#a9871a; } .green .corner, .green .name{ color:#2f8a4e; }
+  .blue .corner, .blue .name{ color:#2a63a8; } .purple .corner, .purple .name{ color:#6d44a6; }
+
+  .pcard.wild{ background:linear-gradient(160deg, #3b2f14 0%, #241b0a 60%, #120c04 100%); color:var(--gold); }
+  .pcard.wild::before{ border-color:rgba(226,192,106,.4); }
+  .pcard.wild .corner{ color:var(--gold); }
+  .pcard.wild .name{ color:var(--gold); opacity:.95; }
+  .pcard.wild .emblem svg{ filter:drop-shadow(0 0 4px rgba(226,192,106,.6)); }
+
+  .pcard.tactic{ background:linear-gradient(160deg, #4a1d1a 0%, #2b0f0d 60%, #160605 100%); color:#f0c8b8; font-family:'Noto Sans JP',sans-serif; }
+  .pcard.tactic::before{ border-color:rgba(240,200,184,.3); }
+  .pcard.tactic .ttitle{ position:absolute; top:6px; left:0; right:0; text-align:center; font-weight:900; font-size:11px; letter-spacing:.04em; color:#f5d8c6; }
+  .pcard.tactic.mini .ttitle{ font-size:9px; top:4px; }
+  .pcard.tactic .emblem{ top:58%; }
+
+  .pcard.monster{ background:linear-gradient(160deg, #3a1030 0%, #200a1c 60%, #100510 100%); color:#e8b8d8; font-family:'Noto Sans JP',sans-serif; }
+  .pcard.purchased{
+    background:linear-gradient(160deg, #4a1414 0%, #2a0a0a 60%, #150505 100%) !important;
+    box-shadow:inset 0 0 0 2px rgba(224,90,74,.6), 0 0 10px rgba(224,90,74,.5);
+  }
+  .pcard.purchased .name, .pcard.purchased .ttitle{ color:#f0b0a0; }
+  .pcard.purchased::after{
+    content:"🏪"; position:absolute; top:1px; right:3px; font-size:16px; z-index:3;
+    filter:drop-shadow(0 0 4px rgba(224,90,74,.9));
+  }
+  .pcard.mini.purchased::after{ font-size:11px; }
+  .pcard.monster::before{ border-color:rgba(200,120,180,.35); }
+  .pcard.monster .corner{ color:#f0c8e0; font-size:13px; }
+  .pcard.monster.mini .corner{ font-size:10px; }
+  .pcard.monster .name{ color:#f0c8e0; }
+  .pcard.monster .ttitle{ position:absolute; top:6px; left:0; right:0; text-align:center; font-weight:900; font-size:11px; color:#e8c8ec; }
+  .pcard.monster.mini .ttitle{ font-size:8px; top:3px; }
+  .pcard.monster.necro{ background:linear-gradient(160deg,#241030,#120818); }
+
+  .pcard.enemy{ background:linear-gradient(160deg, #7a2420 0%, #4a1210 60%, #240808 100%) !important; }
+  .pcard.enemy::before{ border-color:rgba(255,150,130,.45) !important; }
+  .pcard.enemy .corner{ color:#ffd9d0 !important; }
+  .pcard.enemy .name{ color:#ffd9d0 !important; }
+  .pcard.enemy .emblem svg{ opacity:.55; }
+
+  .pcard.big{ width:190px; height:190px; border-radius:18px; }
+  .pcard.big .corner{ font-size:36px; top:10px; left:12px; }
+  .pcard.big .corner.br{ top:auto; left:auto; bottom:10px; right:12px; }
+  .pcard.big .name{ font-size:13px; bottom:9px; }
+  .pcard.big.tactic .ttitle{ font-size:17px; top:14px; }
+
+  /* ---------- board ---------- */
+  .upcoming-wrap{ margin-bottom:4px; flex:0 0 auto; display:flex; align-items:center; gap:6px; }
+  .upcoming-label{ flex:0 0 auto; font-size:9.5px; color:var(--cream-2); opacity:.7; margin:0; letter-spacing:.02em; line-height:1.2; white-space:nowrap; }
+  .upcoming-rows{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column-reverse; gap:4px; }
+  .upcoming-row{ display:flex; gap:5px; overflow-x:auto; padding:2px 2px 4px; -webkit-overflow-scrolling:touch; }
+  .upcoming-row-overflow{ display:none; }
+  .upcoming-chip{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:center; gap:3px;
+    background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.09);
+    border-radius:6px; padding:5px 8px; font-size:12.5px; font-weight:700;
+    color:var(--cream-2); opacity:.8; font-family:'Noto Sans JP',sans-serif; white-space:nowrap;
+  }
+  .upcoming-chip .mini-mark{ width:13px; height:13px; }
+  .board-wrap{ position:relative; flex:1 1 auto; min-height:0; display:flex; }
+  .board{ display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:minmax(0,1fr); gap:8px; flex:1 1 auto; min-height:0; width:100%; }
+  .flag{
+    position:relative; border-radius:9px; padding:9px 6px 7px; min-height:0; display:flex; flex-direction:column; justify-content:center;
+    background:linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.42));
+    border:1px solid rgba(0,0,0,.35);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.04);
+    transition:box-shadow .2s, border-color .2s, transform .15s, opacity .2s;
+    cursor:pointer;
+  }
+  .flag .badge{
+    position:absolute; top:-9px; left:50%; transform:translateX(-50%); z-index:2;
+    background:var(--gold); color:#201808; font-size:9px; font-weight:800;
+    padding:2px 8px; border-radius:9px; white-space:nowrap; box-shadow:0 2px 5px rgba(0,0,0,.4);
+  }
+  .stack{ position:relative; height:calc(var(--slot-h) + 2 * 20px); }
+  .slot{ position:absolute; left:50%; transform:translateX(-50%); width:var(--slot-w); height:var(--slot-h);
+    border-radius:9px; border:1px dashed rgba(255,255,255,.14); }
+  .slot:nth-child(1){ top:0; } .slot:nth-child(2){ top:20px; } .slot:nth-child(3){ top:40px; }
+  .stack.spread-choose{ display:flex; align-items:center; justify-content:center; gap:8px; height:var(--slot-h); }
+  .stack.spread-choose .slot{ position:relative; left:auto; top:auto !important; transform:none; flex:0 0 auto; }
+  .slot .pcard.mini{ width:var(--slot-w); height:var(--slot-h); border-radius:9px; }
+  .slot .pcard.mini .corner{ font-size:17px; top:4px; left:6px; }
+  .slot .pcard.mini .emblem{ width:32px; height:32px; }
+  .slot .pcard.mini .ttitle{ font-size:12px; }
+  .slot .pcard{ position:absolute; inset:0; }
+  .slot.next{ border-color:rgba(255,255,255,.35); border-style:solid; }
+  .slot.choosable{ cursor:pointer; z-index:4; touch-action:none; }
+  .slot.choosable .pcard{ box-shadow:0 0 0 2px var(--glow), 0 0 14px rgba(143,240,196,.7); animation:choosable-pulse 1s ease-in-out infinite; }
+  @keyframes choosable-pulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.06); } }
+
+  .flag.drop-ok{ border-color:var(--glow); box-shadow:0 0 0 1px var(--glow) inset, 0 0 14px rgba(143,240,196,.55); animation:glow 1.1s ease-in-out infinite; }
+  .flag.drop-ok .slot.next{ border-color:var(--glow); box-shadow:0 0 8px rgba(143,240,196,.6) inset; }
+  .flag.drop-ok.hover{ transform:scale(1.04); box-shadow:0 0 0 2px var(--glow) inset, 0 0 22px rgba(143,240,196,.85); }
+  .flag.drop-no{ opacity:.45; }
+  .flag.closed{ cursor:default; }
+  .flag.closed::after{ content:""; position:absolute; inset:0; border-radius:9px; pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(226,192,106,.35); }
+  .flag.closed.enemy-captured::after{ box-shadow:inset 0 0 0 2px rgba(224,90,74,.7); background:rgba(160,40,30,.1); }
+  .flag.closed.player-captured::after{ box-shadow:inset 0 0 0 2px rgba(226,192,106,.5); }
+  @keyframes glow{ 0%,100%{ box-shadow:0 0 0 1px var(--glow) inset, 0 0 10px rgba(143,240,196,.4);} 50%{ box-shadow:0 0 0 1px var(--glow) inset, 0 0 18px rgba(143,240,196,.85);} }
+  @keyframes closePulse{ 0%{ box-shadow:0 0 0 0 var(--pulse-color, rgba(226,192,106,.8));} 100%{ box-shadow:0 0 0 20px rgba(0,0,0,0);} }
+  .flag.just-closed{ animation:closePulse .75s ease-out; }
+  .flag.fogged{ border-color:rgba(143,240,196,.35); }
+
+  .particle{ position:absolute; width:6px; height:6px; border-radius:50%; background:var(--gold); pointer-events:none;
+    animation:burst .65s cubic-bezier(.2,.7,.3,1) forwards; box-shadow:0 0 6px var(--gold); }
+  @keyframes burst{ 0%{ transform:translate(0,0) scale(1); opacity:1;} 100%{ transform:var(--pt) scale(.2); opacity:0;} }
+
+  .closefx{
+    position:fixed; z-index:150; pointer-events:none; text-align:center; padding:8px 16px; border-radius:10px;
+    font-family:'Cinzel',serif; background:rgba(8,12,9,.88); border:1px solid var(--gold-3);
+    box-shadow:0 8px 22px rgba(0,0,0,.55);
+  }
+  .closefx .cf-name{ font-size:15px; font-weight:800; letter-spacing:.06em; white-space:nowrap; }
+  .closefx .cf-calc{ font-size:10.5px; color:var(--cream-2); margin-top:2px; letter-spacing:.03em; }
+  .closefx .cf-score{ font-size:21px; font-weight:800; margin-top:3px; }
+  .closefx.tier-wedge{ border-color:var(--gold); box-shadow:0 0 30px rgba(226,192,106,.75), 0 8px 22px rgba(0,0,0,.55); }
+  .closefx.tier-wedge .cf-name, .closefx.tier-wedge .cf-score{ color:var(--gold); text-shadow:0 0 10px rgba(226,192,106,.85); }
+  .closefx.tier-phalanx{ border-color:#e7dfc2; }
+  .closefx.tier-phalanx .cf-name, .closefx.tier-phalanx .cf-score{ color:#f0ead2; }
+  .closefx.tier-battalion{ border-color:var(--glow); }
+  .closefx.tier-battalion .cf-name, .closefx.tier-battalion .cf-score{ color:var(--glow); }
+  .closefx.tier-skirmish{ border-color:#7fb8ef; }
+  .closefx.tier-skirmish .cf-name, .closefx.tier-skirmish .cf-score{ color:#9fd0ff; }
+  .closefx.tier-host .cf-name, .closefx.tier-host .cf-score{ color:var(--cream-2); }
+  .closefx.tier-monster{ border-color:#e06aa8; box-shadow:0 0 28px rgba(224,106,168,.6), 0 8px 22px rgba(0,0,0,.55); }
+  .closefx.tier-monster .cf-name, .closefx.tier-monster .cf-score{ color:#f2a0cc; text-shadow:0 0 10px rgba(224,106,168,.8); }
+
+  .scorefly{
+    position:fixed; z-index:150; pointer-events:none; font-family:'Cinzel',serif; font-weight:800; font-size:17px;
+    color:var(--gold); text-shadow:0 0 8px rgba(226,192,106,.75);
+  }
+
+  .screenflash{ position:fixed; inset:0; z-index:140; pointer-events:none; background:radial-gradient(ellipse at 50% 40%, rgba(226,192,106,.35), transparent 60%); opacity:0; }
+
+  .synergy-overlay{
+    position:fixed; top:40%; left:50%; transform:translate(-50%,-50%) scale(.7); opacity:0;
+    background:rgba(8,8,8,.94); border:2px solid var(--gold); border-radius:14px;
+    padding:18px 26px; text-align:center; z-index:300; pointer-events:none;
+    transition:transform .4s cubic-bezier(.2,.8,.2,1), opacity .35s;
+    box-shadow:0 0 46px rgba(226,192,106,.6);
+  }
+  .synergy-overlay.show{ transform:translate(-50%,-50%) scale(1); opacity:1; }
+  .synergy-overlay.hide{ transform:translate(-50%,-60%) scale(1.12); opacity:0; }
+  .syn-title{ font-family:'Cinzel',serif; font-size:17px; color:var(--gold); font-weight:800; margin-bottom:8px; white-space:nowrap; }
+  .syn-line{ display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; color:var(--cream-2); margin:5px 0; white-space:nowrap; }
+  .syn-line .mini-mark{ width:16px; height:16px; }
+  .syn-line b{ color:var(--gold); }
+  .syn-total{ font-family:'Cinzel',serif; font-size:28px; color:#fff; font-weight:800; margin-top:8px; text-shadow:0 0 14px rgba(226,192,106,.85); }
+
+  .combo-beam{
+    position:fixed; height:3px; background:linear-gradient(90deg, transparent, #f2a0cc, transparent);
+    transform-origin:0 50%; opacity:0; z-index:250; pointer-events:none;
+    box-shadow:0 0 10px rgba(242,160,204,.8); transition:opacity .4s;
+  }
+  .combo-beam.show{ opacity:1; }
+  .combo-beam-label{
+    position:fixed; transform:translate(-50%,-50%); font-family:'Cinzel',serif; font-weight:800; font-size:20px;
+    color:#f2a0cc; text-shadow:0 0 12px rgba(242,160,204,.9); z-index:251; opacity:0; pointer-events:none;
+    transition:opacity .5s, transform 1.8s ease-out;
+  }
+  .combo-beam-label.show{ opacity:1; transform:translate(-50%,-140%); }
+  .flag.combo-glow{ animation:comboGlowPulse 1.2s ease-in-out infinite; }
+  .flag.combo-live{ box-shadow:0 0 0 2px rgba(242,160,204,.55), 0 0 14px rgba(242,160,204,.4); }
+  .combo-live-beam{
+    position:fixed; height:2px; background:linear-gradient(90deg, transparent, rgba(242,160,204,.75), transparent);
+    transform-origin:0 50%; z-index:5; pointer-events:none;
+  }
+  @keyframes comboGlowPulse{
+    0%,100%{ box-shadow:0 0 0 2px rgba(242,160,204,.6), 0 0 16px rgba(242,160,204,.5); }
+    50%{ box-shadow:0 0 0 3px rgba(242,160,204,.9), 0 0 28px rgba(242,160,204,.8); }
+  }
+
+  /* ---------- hint (transient warnings only) ---------- */
+  .hint{ position:fixed; left:0; right:0; bottom:146px; z-index:6; pointer-events:none; text-align:center; font-size:12px; color:var(--cream-2); min-height:16px; letter-spacing:.02em; text-shadow:0 1px 3px rgba(0,0,0,.9); padding:0 12px; }
+  .npc-bubble{
+    position:fixed; left:50%; bottom:115px; transform:translateX(-50%) translateY(8px); z-index:6;
+    max-width:88%; background:#fff8ec; color:#2a1a10; font-size:12.5px; font-weight:700; line-height:1.4;
+    padding:9px 14px; border-radius:14px; box-shadow:0 6px 16px rgba(0,0,0,.45);
+    text-align:center; opacity:0; pointer-events:none; transition:opacity .22s, transform .22s;
+  }
+  .npc-bubble::after{
+    content:''; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%);
+    border-width:7px 7px 0; border-style:solid; border-color:#fff8ec transparent transparent;
+  }
+  .npc-bubble.show{ opacity:.92; transform:translateX(-50%) translateY(0); }
+  .hint.warn{ color:var(--danger); }
+
+  /* ---------- hand ---------- */
+  .handbar{
+    position:fixed; left:0; right:0; bottom:0; height:150px; z-index:5;
+    background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 40%, rgba(0,0,0,.75) 100%);
+    pointer-events:none;
+  }
+  .float-btn-row{
+    position:absolute; left:50%; top:-52px; transform:translateX(-50%); z-index:9;
+    display:flex; gap:10px; pointer-events:none;
+  }
+  .float-btn-row button{ pointer-events:auto; }
+  .confirmbtn-float{
+    padding:11px 30px; border-radius:22px; background:linear-gradient(180deg, var(--glow), #4fc98a);
+    border:1px solid rgba(255,255,255,.4); color:#0a2015; font-size:15px; font-weight:800;
+    font-family:'Noto Sans JP',sans-serif; box-shadow:0 4px 16px rgba(0,0,0,.5), 0 0 18px rgba(143,240,196,.6);
+    animation:confirmbtn-pulse 1.1s ease-in-out infinite;
+  }
+  .cancelbtn-float{
+    padding:11px 20px; border-radius:22px; background:rgba(224,90,74,.3);
+    border:1px solid rgba(224,90,74,.8); color:#ffdcd2; font-size:14px; font-weight:800;
+    font-family:'Noto Sans JP',sans-serif; box-shadow:0 4px 14px rgba(0,0,0,.5);
+  }
+  @keyframes confirmbtn-pulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.06); } }
+  .handbar .rail{ position:absolute; left:0; right:0; bottom:0; height:6px;
+    background:linear-gradient(180deg, var(--rail-hi), var(--rail)); box-shadow:0 -1px 0 rgba(255,255,255,.08); }
+  .hand{ position:absolute; left:50%; bottom:24px; width:0; height:var(--card-h); }
+  .hand .pcard{
+    position:absolute; left:calc(var(--card-w) / -2); top:0; pointer-events:auto; cursor:grab; touch-action:none;
+    transition:transform .32s cubic-bezier(.2,.8,.2,1), opacity .25s, box-shadow .2s;
+    transform-origin:50% 100%;
+  }
+  .hand .pcard.picked{ box-shadow:0 0 0 2px var(--glow), 0 8px 18px rgba(0,0,0,.6); }
+  .hand .pcard.dim{ opacity:.35; }
+  .hand .pcard.ghost{ opacity:0; }
+  .handcount{ position:absolute; right:14px; bottom:10px; font-size:10px; color:var(--cream-2); opacity:.7; pointer-events:none; }
+
+  .dragcard{ position:fixed; z-index:100; pointer-events:none; transform:rotate(-3deg) scale(1.08);
+    box-shadow:0 18px 30px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.3); }
+  .flycard{ position:fixed; z-index:99; pointer-events:none;
+    transition:left .34s cubic-bezier(.22,.8,.25,1), top .34s cubic-bezier(.22,.8,.25,1), width .34s, height .34s, transform .34s, opacity .3s; }
+
+  /* ---------- modals ---------- */
+  .modal-bg{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.72); display:flex; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(3px); }
+  .modal{ width:100%; max-width:380px; max-height:86vh; overflow-y:auto; border-radius:12px; padding:22px 20px;
+    background:linear-gradient(180deg, #1a2b22, #0f1c16); border:1px solid var(--gold-3);
+    box-shadow:0 20px 50px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.05); }
+  .modal h2{ margin:0 0 10px; font-family:'Cinzel',serif; font-size:18px; color:var(--gold); letter-spacing:.12em; text-align:center; }
+  #goalModal .modal{ height:min(86vh, 640px); max-height:none; display:flex; flex-direction:column; overflow:hidden; }
+  #goalModal .toppage{ flex:1 1 auto; overflow-y:auto; min-height:0; }
+  .modal .gradebig{ font-family:'Cinzel',serif; font-size:24px; font-weight:800; color:var(--gold); text-align:center; line-height:1.25; margin:6px 0; text-shadow:0 0 24px rgba(226,192,106,.5); }
+  .modal .gradebig.wavename{ font-size:22px; }
+  .modal .gradebig.victory{ color:#f2d97a; text-shadow:0 0 30px rgba(242,217,122,.8); }
+  .modal .gradebig.defeat{ color:#e07a6a; text-shadow:0 0 20px rgba(224,122,106,.6); }
+  .modal .scorebig{ text-align:center; font-size:14px; color:var(--cream-2); }
+  .statrow-end{
+    display:flex; justify-content:center; flex-wrap:wrap; gap:6px 14px;
+    font-size:11px; color:var(--cream-2); opacity:.9; margin-top:8px;
+  }
+  .statrow-end b{ color:var(--gold); font-family:'Cinzel',serif; }
+  .end-hint{
+    margin-top:12px; padding:10px 12px; border-radius:10px;
+    background:rgba(143,240,196,.1); border:1px solid rgba(143,240,196,.35);
+    font-size:12px; color:#d8fff0; line-height:1.5; text-align:left;
+  }
+  .end-hint b{ color:var(--glow); }
+  .modal .scorebig b{ color:#fff; font-size:22px; font-family:'Cinzel',serif; }
+  .modal .tiers div{ display:flex; justify-content:space-between; font-size:12px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.06); color:var(--cream-2); }
+  .modal .tiers b{ color:var(--gold); font-family:'Cinzel',serif; }
+  .modal .tiers .ft-row{ display:block; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+  .modal .tiers .ft-head{ border-bottom:none; padding:0; }
+  .modal .tiers .ft-cards{ display:flex; flex-wrap:wrap; justify-content:flex-start; gap:6px; border-bottom:none; padding:5px 0 0; font-size:12px; opacity:1; }
+  .cl-item{
+    display:inline-flex; align-items:center; gap:4px;
+    background:linear-gradient(160deg, #fbf5e6, #e8dcc0); color:var(--ink);
+    border-radius:5px; padding:3px 7px; font-weight:800;
+    box-shadow:0 2px 4px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .ft-symbol{
+    display:inline-flex; align-items:center; gap:3px;
+    color:var(--gold); font-weight:800; font-size:13px; margin-left:2px;
+  }
+  .ft-symbol .mini-mark{ width:14px; height:14px; }
+  .ft-symbol.combo{ color:#f2a0cc; text-shadow:0 0 8px rgba(224,106,168,.6); }
+  .combo-summary{
+    display:flex; align-items:center; gap:6px; font-size:12px; color:var(--cream-2);
+    padding:6px 4px; margin-top:4px; border-top:1px dashed rgba(226,192,106,.35);
+  }
+  .combo-summary .mini-mark{ width:15px; height:15px; }
+  .combo-summary b{ color:#f2a0cc; }
+  .combo-recap{
+    margin-top:10px; padding-top:10px; border-top:1px solid rgba(226,192,106,.35);
+    font-size:12.5px; color:var(--cream-2); text-align:center; line-height:1.9;
+  }
+  .combo-recap b{ color:var(--gold); }
+  .combo-recap-eq{ margin-top:4px; font-size:16px; font-weight:800; color:#f2a0cc; }
+  .combo-recap-eq b{ color:#fff; text-shadow:0 0 10px rgba(242,160,204,.7); }
+  .mini-mark{ width:.75em; height:.75em; flex:0 0 auto; vertical-align:middle; }
+  .cl-item .mini-mark{ width:14px; height:14px; }
+  .btn{ display:block; width:100%; margin-top:16px; padding:12px; border-radius:8px; border:none; cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif; font-weight:900; font-size:14px; letter-spacing:.1em;
+    background:linear-gradient(180deg, #ecd28a, var(--gold-2)); color:#201808; box-shadow:0 3px 0 #6b5220, 0 6px 12px rgba(0,0,0,.4); }
+  .btn:active{ transform:translateY(2px); box-shadow:0 1px 0 #6b5220; }
+  .btn.ghost{ background:transparent; box-shadow:none; border:1px solid var(--gold-3); color:var(--cream-2); margin-top:8px; }
+  .btn.ghost:active{ transform:translateY(1px); }
+
+  .cardinfo{ width:100%; max-width:300px; text-align:center; }
+  .reward-box{ width:100%; max-width:320px; text-align:center; background:var(--panel); border:1px solid rgba(226,192,106,.3); border-radius:16px; padding:20px 16px; }
+  .reward-title{ font-family:'Cinzel',serif; font-size:19px; color:var(--gold); font-weight:800; margin-bottom:4px; }
+  .reward-sub{ font-size:11.5px; color:var(--cream-2); opacity:.85; margin-bottom:14px; }
+  .reward-options{ display:flex; gap:10px; justify-content:center; }
+  .reward-option{
+    flex:1; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.12); border-radius:12px;
+    padding:12px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px;
+    font-family:'Noto Sans JP',sans-serif; color:var(--cream-2); transition:transform .15s, border-color .15s;
+  }
+  .reward-option:active{ transform:scale(.96); border-color:var(--gold); }
+  .reward-icon{ width:34px; height:34px; }
+  .reward-icon svg{ width:100%; height:100%; }
+  .reward-name{ font-size:11px; font-weight:700; line-height:1.3; }
+  .ci-card{ display:flex; justify-content:center; margin-bottom:16px; }
+  .ci-text{ font-size:13px; line-height:1.85; color:var(--cream-2); text-align:left; }
+  .ci-text b{ color:var(--gold); }
+
+  .tabbar{ display:flex; gap:6px; margin:12px 0 8px; flex-wrap:wrap; }
+  .subtabbar{ margin:8px 0 10px; }
+  .subtabbtn{ flex:1 1 28%; min-width:74px; font-size:11px; padding:6px 3px; }
+  .toppage{ margin-top:2px; }
+  .subpage{ min-height:300px; max-height:300px; overflow-y:auto; }
+  .tabbtn{
+    flex:1; padding:7px 4px; border-radius:20px; border:1px solid var(--gold-3);
+    background:rgba(0,0,0,.3); color:var(--cream-2); font-size:12px; font-weight:700;
+    font-family:'Noto Sans JP',sans-serif; cursor:pointer;
+  }
+  .tabbtn.active{ background:var(--gold); color:#201808; border-color:var(--gold); }
+  .howto-section{ margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.07); }
+  .howto-section:last-child{ border-bottom:none; }
+  .howto-title{ font-family:'Cinzel',serif; font-size:13px; color:var(--gold); margin:0 0 4px; }
+  .howto-section p{ font-size:12px; line-height:1.75; color:var(--cream-2); margin:0; }
+  .howto-section .formation-example{ margin-top:8px; }
+  .pcard.xs{ width:38px; height:38px; border-radius:5px; }
+  .pcard.xs .corner{ font-size:9px; top:2px; left:3px; }
+  .pcard.xs .corner.br{ bottom:2px; right:3px; }
+  .pcard.xs .emblem{ width:15px; height:15px; }
+  .pcard.xs .name{ display:none; }
+  .pcard.xs.tactic .ttitle{ font-size:6px; top:2px; }
+  .formation-example{ display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:1px solid rgba(255,255,255,.08); }
+  .formation-example .ex-cards{ display:flex; gap:3px; flex:0 0 auto; }
+  .formation-example .ex-info{ flex:1; text-align:left; }
+  .formation-example .ex-name{ font-family:'Cinzel',serif; font-weight:800; font-size:12.5px; color:var(--gold); }
+  .formation-example .ex-name .mult{ color:var(--cream-2); font-weight:400; font-size:11px; font-family:'Noto Sans JP',sans-serif; }
+  .formation-example .ex-desc{ font-size:10.5px; color:var(--cream-2); margin-top:2px; line-height:1.5; }
+
+  .beststat{ text-align:center; font-size:11px; color:var(--cream-2); opacity:.85; margin-top:4px; }
+  .beststat b{ color:var(--gold); font-family:'Cinzel',serif; }
+
+  .flag .badge.lockbadge{ background:var(--danger); color:#2a0a04; }
+
+  .flag-result-big{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:100%; min-height:90px; gap:2px; text-align:center; padding:4px 2px;
+  }
+  .frb-total{ font-family:'Cinzel',serif; font-weight:800; font-size:32px; color:var(--gold); line-height:1;
+    text-shadow:0 0 14px rgba(226,192,106,.4); display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap; }
+  .frb-total .mini-mark{ width:26px; height:26px; }
+  .frb-name{ font-size:11.5px; color:var(--cream-2); letter-spacing:.02em; }
+  .frb-grade{ font-family:'Cinzel',serif; font-weight:800; font-size:15px; color:var(--gold-2); margin-top:1px; }
+  .flag-result-big.combo-boosted .frb-total{
+    color:#ffd0ee; text-shadow:0 0 10px rgba(242,160,204,.9), 0 0 22px rgba(242,160,204,.6);
+    animation:combo-boost-pulse 1s ease-in-out infinite;
+  }
+  .frb-combo-tag{
+    font-size:15px; color:#f2a0cc; font-weight:900; margin-left:2px;
+    text-shadow:0 0 8px rgba(242,160,204,.9);
+  }
+  .frb-time-tag{
+    font-size:11px; color:#8ff0c4; font-weight:800; margin-left:4px;
+    text-shadow:0 0 8px rgba(143,240,196,.8);
+  }
+  @keyframes combo-boost-pulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.07); } }
+  .flag .badge.monbadge{ background:#e06aa8; color:#2a0a1c; }
+  .flag .badge.timeoutbadge{ background:#5a5a5a; color:#ddd; }
+  .flag.locked-turns{ opacity:.55; }
+  .flag.locked-turns::after{
+    content:""; position:absolute; inset:0; border-radius:9px; pointer-events:none;
+    background:repeating-linear-gradient(45deg, rgba(255,80,60,.07) 0 6px, transparent 6px 12px);
+    box-shadow:inset 0 0 0 1px rgba(255,107,74,.4);
+  }
+
+  .cardgrid{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-height:52vh; overflow-y:auto; padding:6px 2px; }
+  .cardlist-empty{ text-align:center; color:var(--cream-2); font-size:12px; padding:10px 0; }
+</style>
+</head>
+<body>
+<div class="title-screen" id="titleScreen">
+  <div class="title-inner">
+    <div class="title-emblem">
+      <svg viewBox="0 0 100 100" fill="none" stroke="#e2c06a" stroke-width="4"><path d="M50 8 L88 28 L88 55 C88 78 70 90 50 96 C30 90 12 78 12 55 L12 28 Z"/><path d="M50 8 L50 96" stroke-width="2" opacity=".5"/></svg>
+    </div>
+    <div class="title-logo">SOLO SIEGE</div>
+    <div class="title-sub">六つの旗</div>
+    <div class="title-highscore">ハイスコア<br><b id="titleHighScore">0</b></div>
+    <button class="btn title-startbtn" id="titleStartBtn">はじめる</button>
+    <button class="btn ghost title-howtobtn" id="titleHowtoBtn">遊び方</button>
+    <div class="title-sound-row">
+      <button class="iconbtn sound-btn" id="titleSfxBtn">🔊</button>
+      <button class="iconbtn sound-btn" id="titleBgmBtn">🎵</button>
+    </div>
+  </div>
+</div>
+<div class="title-screen char-screen" id="charScreen" style="display:none;">
+  <div class="char-inner">
+    <div class="char-story">名も無き村を、モンスターから守ろう。</div>
+    <div class="char-prompt">キャラを選んでください</div>
+    <div class="char-list" id="charList"></div>
+    <button class="btn ghost title-howtobtn" id="charBackBtn" style="margin-top:14px;">タイトルへ戻る</button>
+  </div>
+</div>
+<div class="app" id="appRoot" style="display:none;">
+  <div class="topbar">
+    <div class="char-badge">
+      <span class="char-badge-name" id="topCharName">歴戦の英雄</span>
+      <span class="char-badge-score">ベスト <b id="topCharBest">0</b></span>
+    </div>
+    <div class="topbar-btns">
+      <button class="iconbtn" id="helpBtn">?</button>
+      <button class="iconbtn" id="menuBtn">☰</button>
+    </div>
+  </div>
+  <div class="menu-panel" id="menuPanel" style="display:none;">
+    <button class="menu-item" id="sfxToggleBtn">🔊 効果音：ON</button>
+    <button class="menu-item" id="bgmToggleBtn">🎵 BGM：ON</button>
+    <button class="menu-item" id="menuToTitleBtn">🏠 タイトルへ戻る</button>
+  </div>
+
+  <div class="wavebar">
+    <div class="wave-title" id="waveTitle">ステージ1・WAVE1：ゴブリンの大群</div>
+    <div class="boss-hp-row">
+      <div class="boss-hp-bar"><div class="boss-hp-fill" id="bossHpFill"></div></div>
+      <div class="boss-hp-num"><b id="bossHpNum">200</b> / <span id="bossHpMax">200</span></div>
+    </div>
+  </div>
+
+  <div class="timerrow">
+    <span class="clock-icon">🕐</span>
+    <span class="clock-seconds" id="clockSeconds">15.0</span>
+    <div class="timerbar"><div class="timerfill" id="timerFill"></div></div>
+  </div>
+  <div class="actionrow">
+    <button class="shuffle-btn" id="freeShuffleBtn">🔄 シャッフル <span id="freeShuffleCount">1</span></button>
+    <button class="giveup-btn" id="giveupBtn">ギブアップ</button>
+  </div>
+
+  <div class="statsrow">
+  <div class="powerstats">
+    <div class="power-main"><span class="power-label">戦力</span><span class="power-num" id="scoreNum">0</span></div>
+    <div class="power-sub" id="comboPreview" style="display:none; color:#f2a0cc;">コンボ込み <b id="comboPreviewNum" style="color:#f2a0cc;">0</b></div>
+    <div class="power-sub">トータル <b id="totalStat">0</b><span class="sep"> ・ </span>ベスト <b id="bestTotalStat">0</b></div>
+  </div>
+
+  <div class="pilerow">
+    <button class="pilebtn" id="grandPileBtn">
+      <div class="cardpile">
+        <div class="pcard mini back grand"></div>
+        <div class="pcard mini back grand"></div>
+        <div class="pcard mini back grand"></div>
+        <div class="pilecount" id="grandCount">35</div>
+      </div>
+    </button>
+    <button class="pilebtn" id="deckPileBtn">
+      <div class="cardpile">
+        <div class="pcard mini back"></div>
+        <div class="pcard mini back"></div>
+        <div class="pcard mini back"></div>
+        <div class="pilecount" id="deckCount">70</div>
+      </div>
+    </button>
+    <button class="pilebtn" id="gravePileBtn">
+      <div class="cardpile">
+        <div class="pcard mini back grave"></div>
+        <div class="pilecount" id="graveCount">0</div>
+      </div>
+    </button>
+  </div>
+  </div>
+
+  <div class="telops">
+    <div class="telop now"><b>HOW</b><span id="telopNow"></span></div>
+  </div>
+
+  <div class="upcoming-wrap">
+    <div class="upcoming-label">Next</div>
+    <div class="upcoming-rows">
+      <div class="upcoming-row" id="upcomingRow"></div>
+      <div class="upcoming-row upcoming-row-overflow" id="upcomingRowOverflow"></div>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+  <div class="board" id="board"></div>
+  </div>
+  <div class="hint" id="hint"></div>
+</div>
+
+<div class="npc-bubble" id="npcBubble"></div>
+<div class="handbar">
+  <div class="rail"></div>
+  <div class="float-btn-row" id="floatBtnRow">
+    <button id="cancelPendingBtn" class="cancelbtn-float" style="display:none;">✕ キャンセル</button>
+    <button id="confirmPendingBtn" class="confirmbtn-float" style="display:none;">確定</button>
+  </div>
+  <div class="hand" id="hand"></div>
+  <div class="handcount" id="handCount"></div>
+</div>
+
+<div class="modal-bg" id="cardInfoBg" style="display:none;">
+  <div class="cardinfo">
+    <div class="ci-card" id="ciCardWrap"></div>
+    <div class="ci-text" id="ciText"></div>
+    <button class="btn" id="ciPrimary">選ぶ</button>
+    <button class="btn ghost" id="ciClose">とじる</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="rewardModal" style="display:none;">
+  <div class="reward-box">
+    <div class="reward-title">🎉 コンボ報酬</div>
+    <div class="reward-sub" id="rewardSub"></div>
+    <div class="reward-options" id="rewardOptions"></div>
+  </div>
+</div>
+
+<div class="urgency-vignette" id="urgencyVignette"></div>
+<div class="countdown-big" id="countdownBig"></div>
+
+<div class="modal-bg" id="confirmModal" style="display:none;">
+  <div class="reward-box">
+    <div class="reward-title" id="confirmTitle">確認</div>
+    <div class="reward-sub" id="confirmMsg" style="margin-bottom:16px;"></div>
+    <button class="btn" id="confirmYes">はい</button>
+    <button class="btn ghost" id="confirmNo" style="margin-top:8px;">いいえ</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="goalModal" style="display:none;">
+  <div class="modal">
+    <h2>GOAL</h2>
+    <p style="font-size:12.5px; line-height:1.8; color:var(--cream-2);">
+      6つの旗にカードを3枚ずつ揃えて<b style="color:var(--gold)">封鎖</b>し、役に応じた<b style="color:#f0a8d0">戦力</b>を稼ごう。タイムバーが0になるまで、途切れることなく戦いは続く。
+    </p>
+    <div class="tabbar toptabbar">
+      <button class="tabbtn toptabbtn active" data-toptab="howto">遊び方</button>
+      <button class="tabbtn toptabbtn" data-toptab="cards">カード</button>
+      <button class="tabbtn toptabbtn" data-toptab="info">役立ち情報</button>
+    </div>
+
+    <div class="toppage" data-toppage="howto">
+      <div class="tabbar subtabbar">
+        <button class="tabbtn subtabbtn active" data-subtab="basic">基本</button>
+        <button class="tabbtn subtabbtn" data-subtab="placement">配置</button>
+        <button class="tabbtn subtabbtn" data-subtab="enemy">敵</button>
+        <button class="tabbtn subtabbtn" data-subtab="exchange">デッキ</button>
+      </div>
+      <div class="subpage" data-subpage="basic" id="howtoBasic"></div>
+      <div class="subpage" data-subpage="placement" id="howtoPlacement" style="display:none;"></div>
+      <div class="subpage" data-subpage="enemy" id="howtoEnemy" style="display:none;"></div>
+      <div class="subpage" data-subpage="exchange" id="howtoExchange" style="display:none;"></div>
+    </div>
+
+    <div class="toppage" data-toppage="cards" style="display:none;">
+      <p style="font-size:12px; line-height:1.7; color:var(--cream-2); margin:2px 0 10px;">
+        カードは4種類：<b style="color:var(--gold)">部隊</b>（6色×1〜10）、<b style="color:var(--gold)">万能</b>（青♾️はどこでも、赤♾️は3枚目のみ、色・数字の条件を完全無視）、<b style="color:var(--gold)">軍師</b>（発動効果を持つ特殊カード）、<b style="color:var(--gold)">装備</b>（旗をふさぐ障害）。詳しくは下のタブから。
+      </p>
+      <div class="tabbar subtabbar">
+        <button class="tabbtn subtabbtn active" data-subtab="yaku">役</button>
+        <button class="tabbtn subtabbtn" data-subtab="tactics">軍師</button>
+        <button class="tabbtn subtabbtn" data-subtab="monsters">装備</button>
+      </div>
+      <div class="subpage" data-subpage="yaku" id="formationExamples"></div>
+      <div class="subpage" data-subpage="tactics" id="tacticsList" style="display:none;"></div>
+      <div class="subpage" data-subpage="monsters" id="monsterList" style="display:none;"></div>
+    </div>
+
+    <div class="toppage" data-toppage="info" style="display:none;">
+      <div class="tabbar subtabbar">
+        <button class="tabbtn subtabbtn active" data-subtab="combo">コンボについて</button>
+        <button class="tabbtn subtabbtn" data-subtab="tips">コツ</button>
+      </div>
+      <div class="subpage" data-subpage="combo" id="howtoCombo"></div>
+      <div class="subpage" data-subpage="tips" id="howtoTips" style="display:none;"></div>
+    </div>
+
+    <button class="btn" id="goalClose">とじる</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="cardListModal" style="display:none;">
+  <div class="modal">
+    <h2 id="cardListTitle">山札</h2>
+    <div id="cardListBody"></div>
+    <button class="btn ghost" id="cardListClose">とじる</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="rehireModal" style="display:none;">
+  <div class="modal">
+    <h2>再雇用</h2>
+    <p style="text-align:center; font-size:12px; color:var(--cream-2); margin-top:-6px;">墓地から手札に戻すカードを1枚選んでください。</p>
+    <div id="rehireBody"></div>
+    <button class="btn ghost" id="rehireCancel">キャンセル</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="endModal" style="display:none;">
+  <div class="modal">
+    <h2 id="endTitle">CAMPAIGN OVER</h2>
+    <div class="gradebig" id="finalGrade">WAVE 1</div>
+    <div class="scorebig" id="endSubline">ゴブリンの大群を倒せなかった</div>
+    <div class="statrow-end">
+      <span>今回の戦力 <b id="finalScore">0</b></span>
+      <span>トータル <b id="finalTotal">0</b></span>
+      <span id="bestScoreEnd"></span>
+    </div>
+    <div class="end-hint" id="endHint" style="display:none;"></div>
+    <div class="tiers" id="flagTable" style="margin-top:12px;"></div>
+    <button class="btn" id="endRestart">もう一度、戦う</button>
+    <button class="btn ghost" id="endChangeChar" style="margin-top:8px;">キャラクターを選択する</button>
+  </div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const COLORS = ['red','orange','yellow','green','blue','purple'];
+const CNAME = {red:'赤旗',orange:'橙旗',yellow:'黄旗',green:'緑旗',blue:'青旗',purple:'紫旗'};
+const CFILL = {red:'#b23223',orange:'#c8701f',yellow:'#c39a1e',green:'#2f8a4e',blue:'#2a63a8',purple:'#6d44a6'};
+function miniIcon(pathHtml, fill){
+  return `<svg class="mini-mark" viewBox="0 0 100 100" fill="${fill}" stroke="${fill}">${pathHtml}</svg>`;
+}
+function cardShortLabel(c){
+  if(c.kind==='troop') return `<span class="cl-item">${miniIcon(EMBLEM[c.color],CFILL[c.color])}${c.value}</span>`;
+  if(c.kind==='wild') return `<span class="cl-item">${miniIcon(EMBLEM.wild,wildColor(c))}8</span>`;
+  if(c.kind==='monster'){
+    if(c.sub==='combined') return `<span class="cl-item">${miniIcon(EMBLEM[c.color],CFILL[c.color])}${c.value}+</span>`;
+    if(c.sub==='number') return `<span class="cl-item">${miniIcon(EMBLEM.sword,'#e07a9a')}${c.value}+</span>`;
+    if(c.sub==='mark') return `<span class="cl-item">${miniIcon(EMBLEM[c.color],CFILL[c.color])}</span>`;
+    return `<span class="cl-item">${miniIcon(EMBLEM.necro,'#caa6e0')}職</span>`;
+  }
+  return `<span class="cl-item">${c.name||c.type}</span>`;
+}
+const EMBLEM = {
+  red:    '<path d="M50 6 L86 20 V50 C86 74 50 94 50 94 C50 94 14 74 14 50 V20 Z"/>',
+  orange: '<circle cx="50" cy="50" r="30"/><g stroke-width="8" stroke-linecap="round"><line x1="50" y1="4" x2="50" y2="14"/><line x1="50" y1="86" x2="50" y2="96"/><line x1="4" y1="50" x2="14" y2="50"/><line x1="86" y1="50" x2="96" y2="50"/><line x1="18" y1="18" x2="25" y2="25"/><line x1="75" y1="75" x2="82" y2="82"/><line x1="82" y1="18" x2="75" y2="25"/><line x1="25" y1="75" x2="18" y2="82"/></g>',
+  yellow: '<path d="M50 4 L61 36 L96 36 L68 57 L79 90 L50 70 L21 90 L32 57 L4 36 L39 36 Z"/>',
+  green:  '<path d="M50 6 L94 90 H6 Z"/>',
+  blue:   '<path d="M50 4 L96 50 L50 96 L4 50 Z"/>',
+  purple: '<path d="M27 8 H73 L96 50 L73 92 H27 L4 50 Z"/>',
+  wild:   '<path fill-rule="evenodd" d="M10,50 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z M22,50 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0 Z M46,50 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z M58,50 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0 Z"/>',
+  tactic: '<path d="M50 8 L58 42 L92 50 L58 58 L50 92 L42 58 L8 50 L42 42 Z"/>',
+  monster:'<path d="M12 88 L26 14 L42 58 L50 8 L58 58 L74 14 L88 88 Z"/>',
+  sword:  '<path d="M46 4 H54 V56 H64 V66 H54 V86 L50 96 L46 86 V66 H36 V56 H46 Z"/>',
+  armor:  '<path d="M50 6 L78 18 V32 C78 58 66 78 50 92 C34 78 22 58 22 32 V18 Z M50 20 C42 20 34 24 34 24 V34 C34 52 42 66 50 78 C58 66 66 52 66 34 V24 C66 24 58 20 50 20 Z" fill-rule="evenodd"/>',
+  necro:  '<path d="M50 6 L90 50 L50 94 L10 50 Z" fill-opacity=".55"/><circle cx="50" cy="50" r="16"/>'
+};
+const TACTICS = [
+  {type:'alexander',name:'青♾️',short:'青♾️',desc:'万能・強さ8',count:1},
+  {type:'darius',name:'赤♾️',short:'赤♾️',desc:'万能・強さ8／3枚目のみ',count:1},
+  {type:'scout',name:'補充',short:'補充',desc:'3枚引き2枚捨てる（墓地へ）',count:4},
+  {type:'shuffle',name:'差し替え',short:'差し替え',desc:'手札から好きな枚数を選んで墓地へ送り、その枚数を山札から引き直す',count:3},
+  {type:'wipe',name:'全滅',short:'全滅',desc:'指定した旗のカードを全て墓地へ（封鎖済みも可）',count:2},
+  {type:'rehire',name:'再雇用',short:'再雇用',desc:'墓地からカードを1枚選んで手札に戻す',count:2},
+  {type:'guidance',name:'誘導',short:'誘導',desc:'旗の一番上のカードを別の旗へ移動',count:2},
+  {type:'inspire',name:'鼓舞',short:'鼓舞',desc:'手札の数字をすべて+3にする（最大10）',count:3},
+  {type:'duplicate',name:'複製',short:'複製',desc:'手札のカードを1枚複製する',count:2},
+  {type:'fusion',name:'融合',short:'融合',desc:'手札の部隊カード2枚を選んで数字を両極端に分裂させる（マークは継承）',count:2},
+];
+const GLOBAL_TACTIC_TYPES=['scout','shuffle','inspire','rehire'];
+const HAND_MAX_BASE = 6, LOCK_TURNS = 5, WAVE_DRAW = 40;
+let FLAG_COUNT = 6;
+const CHARACTERS = [
+  {id:'novice', name:'駆け出し兵隊長', rank:'初心者用',
+   desc:'数字カードだけ出てくるから遊びやすい。<br>まずはこのキャラを使って基本的なルールを覚えよう。',
+   flags:4, tactics:false, equipment:false, combo:false, blueInf:false, redInf:true,
+   startShuffles:Infinity, maxShuffles:Infinity, waveLimit:1, rewardMode:'redOnly', maxHandSlot:0},
+  {id:'general', name:'生え抜きの将軍', rank:'中級者用',
+   desc:'装備カードが使えて、コンボもできるから高得点が狙えるぞ！<br>強いモンスターを倒したかったらこれ！',
+   flags:4, tactics:false, equipment:true, combo:true, blueInf:true, redInf:true,
+   startShuffles:3, maxShuffles:3, waveLimit:2, rewardMode:'normal', maxHandSlot:1},
+  {id:'hero', name:'歴戦の英雄', rank:'上級者用',
+   desc:'すべてのカードが使いこなせる。<br>魔王に届く唯一の存在。',
+   flags:4, tactics:true, equipment:true, combo:true, blueInf:true, redInf:true,
+   startShuffles:1, maxShuffles:3, waveLimit:3, rewardMode:'normal', maxHandSlot:3},
+  {id:'king', name:'王', rank:'超上級者用', hidden:true,
+   desc:'無数のフィールドを使いこなす伝説の英雄。<br>すべての事象のその先に。',
+   flags:6, tactics:true, equipment:true, combo:true, blueInf:true, redInf:true,
+   startShuffles:0, maxShuffles:3, waveLimit:3, rewardMode:'normal', maxHandSlot:3},
+];
+let CHARACTER = CHARACTERS[2];
+
+/* ===== AUDIO ===== */
+let audioCtx=null;
+let sfxEnabled = localStorage.getItem('soloSiegeSfx')!=='off';
+let bgmEnabled = localStorage.getItem('soloSiegeBgm')!=='off';
+let bgmPlaying=false, bgmTimer=null, bgmStep=0;
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+  }
+  if(audioCtx.state==='suspended') audioCtx.resume().catch(()=>{});
+  return audioCtx;
+}
+function tone(freq, dur, opts={}){
+  if(!sfxEnabled) return;
+  const ctx=ensureAudio(); if(!ctx) return;
+  const t0=ctx.currentTime;
+  const osc=ctx.createOscillator();
+  const gain=ctx.createGain();
+  osc.type=opts.type||'sine';
+  osc.frequency.setValueAtTime(freq, t0);
+  if(opts.slideTo) osc.frequency.exponentialRampToValueAtTime(opts.slideTo, t0+dur);
+  const vol=opts.vol!=null?opts.vol:0.16;
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(vol, t0+0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t0); osc.stop(t0+dur+0.03);
+}
+const SFX={
+  place(){ tone(520,0.09,{type:'triangle',vol:0.13}); },
+  host(){ tone(392,0.12,{type:'triangle',vol:0.1}); },
+  skirmish(){ [0,70].forEach((d,i)=>setTimeout(()=>tone(494+i*110,0.16,{type:'triangle',vol:0.13}),d)); },
+  battalion(){ [0,80,160].forEach((d,i)=>setTimeout(()=>tone(523+i*131,0.18,{type:'triangle',vol:0.14}),d)); },
+  phalanx(){ [0,80,160].forEach((d,i)=>setTimeout(()=>tone(587+i*147,0.2,{type:'sine',vol:0.15}),d)); },
+  wedge(){ [0,90,180,270].forEach((d,i)=>setTimeout(()=>tone(659+i*165,0.26,{type:'sine',vol:0.17}),d)); },
+  combo(){ [0,100,200,300].forEach((d,i)=>setTimeout(()=>tone(660+i*147,0.22,{type:'sine',vol:0.16}),d)); },
+  equipment(){ tone(300,0.14,{type:'sawtooth',vol:0.09,slideTo:180}); },
+  wipe(){ tone(180,0.24,{type:'sawtooth',vol:0.11,slideTo:60}); },
+  shuffle(){ [0,55,110].forEach((d,i)=>setTimeout(()=>tone(700-i*70,0.08,{type:'square',vol:0.07}),d)); },
+  bossHit(){ tone(110,0.2,{type:'square',vol:0.13,slideTo:55}); },
+  bossDefeat(){ [0,150,300].forEach((d,i)=>setTimeout(()=>tone(392+i*196,0.32,{type:'triangle',vol:0.17}),d)); },
+  reward(){ [0,110,220].forEach((d,i)=>setTimeout(()=>tone(784+i*147,0.28,{type:'sine',vol:0.15}),d)); },
+  warn(){ tone(880,0.08,{type:'square',vol:0.09}); },
+  gameover(){ [440,392,349,294].forEach((f,i)=>setTimeout(()=>tone(f,0.35,{type:'sawtooth',vol:0.13}),i*190)); },
+  defeat(){
+    tone(90,0.5,{type:'sawtooth',vol:0.18,slideTo:40});
+    setTimeout(()=>tone(70,0.6,{type:'square',vol:0.14,slideTo:30}),120);
+  },
+  tap(){ tone(700,0.05,{type:'sine',vol:0.06}); },
+  comboTime(){ [0,90].forEach((d,i)=>setTimeout(()=>tone(988+i*220,0.12,{type:'sine',vol:0.12,slideTo:1400+i*220}),d)); },
+};
+function playSfx(name){ try{ if(SFX[name]) SFX[name](); }catch(e){} }
+const BGM_CHORDS=[
+  {root:261.6, third:329.6, fifth:392.0}, // C
+  {root:220.0, third:261.6, fifth:329.6}, // Am
+  {root:349.2, third:440.0, fifth:523.2}, // F
+  {root:392.0, third:493.9, fifth:587.3}, // G
+  {root:293.7, third:349.2, fifth:440.0}, // Dm
+  {root:246.9, third:311.1, fifth:369.9}, // B
+  {root:329.6, third:415.3, fifth:493.9}, // E
+  {root:220.0, third:277.2, fifth:329.6}, // A
+];
+const BGM_STEPS_PER_CHORD=10, BGM_STEP_MS=375;
+const BGM_BASS_PAT=['root','fifth','third','fifth','root','third','fifth','third','root','fifth'];
+const BGM_LEAD_PAT=[null,'fifth',null,'third',null,'root',null,'fifth',null,'third'];
+function bgmTick(){
+  if(!bgmEnabled || !bgmPlaying) return;
+  const ctx=ensureAudio(); if(!ctx) return;
+  const t0=ctx.currentTime;
+  const chordLen=BGM_CHORDS.length*BGM_STEPS_PER_CHORD;
+  const pos=bgmStep%chordLen;
+  const chordIdx=Math.floor(pos/BGM_STEPS_PER_CHORD);
+  const stepInChord=pos%BGM_STEPS_PER_CHORD;
+  const chord=BGM_CHORDS[chordIdx];
+  const freq=chord[BGM_BASS_PAT[stepInChord]];
+  const osc=ctx.createOscillator(); const gain=ctx.createGain();
+  osc.type='sine'; osc.frequency.setValueAtTime(freq,t0);
+  gain.gain.setValueAtTime(0.0001,t0);
+  gain.gain.exponentialRampToValueAtTime(0.04,t0+0.06);
+  gain.gain.exponentialRampToValueAtTime(0.0001,t0+0.34);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t0); osc.stop(t0+0.36);
+  const leadKey=BGM_LEAD_PAT[stepInChord];
+  if(leadKey){
+    const osc2=ctx.createOscillator(); const gain2=ctx.createGain();
+    osc2.type='triangle'; osc2.frequency.setValueAtTime(chord[leadKey]*2,t0);
+    gain2.gain.setValueAtTime(0.0001,t0);
+    gain2.gain.exponentialRampToValueAtTime(0.045,t0+0.02);
+    gain2.gain.exponentialRampToValueAtTime(0.0001,t0+0.3);
+    osc2.connect(gain2); gain2.connect(ctx.destination);
+    osc2.start(t0); osc2.stop(t0+0.32);
+  }
+  if(stepInChord===0){
+    const padDur=(BGM_STEPS_PER_CHORD*BGM_STEP_MS)/1000;
+    const osc3=ctx.createOscillator(); const gain3=ctx.createGain();
+    osc3.type='sine'; osc3.frequency.setValueAtTime(chord.root*2,t0);
+    gain3.gain.setValueAtTime(0.0001,t0);
+    gain3.gain.exponentialRampToValueAtTime(0.02,t0+padDur*0.3);
+    gain3.gain.exponentialRampToValueAtTime(0.0001,t0+padDur*0.98);
+    osc3.connect(gain3); gain3.connect(ctx.destination);
+    osc3.start(t0); osc3.stop(t0+padDur);
+  }
+  bgmStep++;
+  bgmTimer=setTimeout(bgmTick, BGM_STEP_MS);
+}
+function startBgm(){ if(bgmPlaying||!bgmEnabled) return; bgmPlaying=true; bgmTick(); }
+function stopBgm(){ bgmPlaying=false; if(bgmTimer) clearTimeout(bgmTimer); }
+function updateSoundButtons(){
+  const sfxBtn=document.getElementById('sfxToggleBtn');
+  const bgmBtn=document.getElementById('bgmToggleBtn');
+  const titleSfxBtn=document.getElementById('titleSfxBtn');
+  const titleBgmBtn=document.getElementById('titleBgmBtn');
+  if(sfxBtn){ sfxBtn.textContent=`🔊 効果音：${sfxEnabled?'ON':'OFF'}`; sfxBtn.classList.toggle('muted',!sfxEnabled); }
+  if(bgmBtn){ bgmBtn.textContent=`🎵 BGM：${bgmEnabled?'ON':'OFF'}`; bgmBtn.classList.toggle('muted',!bgmEnabled); }
+  if(titleSfxBtn){ titleSfxBtn.textContent=sfxEnabled?'🔊':'🔇'; titleSfxBtn.classList.toggle('muted',!sfxEnabled); }
+  if(titleBgmBtn){ titleBgmBtn.textContent=bgmEnabled?'🎵':'🔕'; titleBgmBtn.classList.toggle('muted',!bgmEnabled); }
+}
+
+function currentHandMax(){ return HAND_MAX_BASE + handSlotBonus; }
+const ROMAN = ['I','II','III','IV','V','VI'];
+const WAVES = [
+  {name:'何匹かのスライム', threshold:80},
+  {name:'コウモリの群れ', threshold:150},
+  {name:'ゴブリンの集団', threshold:300},
+  {name:'骸骨戦士の集団', threshold:600},
+  {name:'オークの軍勢', threshold:800},
+  {name:'暗黒騎士団', threshold:1000},
+  {name:'古龍', threshold:1200},
+  {name:'地平線いっぱいの巨人族', threshold:1400},
+  {name:'全ての邪悪を背負った魔王', threshold:1600},
+  {name:'不死身の魔王', threshold:1800, immortal:true},
+];
+const TACTIC_EXTRA = {
+  alexander:'どの旗にもいつでも置ける万能カード（青♾️）。色・数字の条件を完全に無視できます（装備の色・数字条件も無視）。',
+  darius:'旗の3枚目としてしか置けない万能カード（赤♾️）。色・数字の条件を完全に無視できます（装備の色・数字条件も無視）。先に2枚置いてから使いましょう。',
+  scout:'発動すると部隊を3枚引き、その中から2枚を選んで捨てます（捨てたカードは墓地へ）。欲しい色や数字を探したい時に。',
+  shuffle:'発動すると、このカード自身はまず墓地へ送られます。その後、残った手札から好きな枚数（0枚でも可）を選んで墓地へ送り、その枚数だけ山札から新しく引けます。手詰まりを一新したい時に。ヘッダーの「いつでもシャッフル」とは別物で、こちらは手札もカードも消費します。',
+  wipe:'指定した旗のカードをすべて墓地へ送り、その旗を空にします。封鎖済みの旗にも使え、その場合は獲得済みの戦力も取り消されて未封鎖に戻ります。',
+  rehire:'発動すると、墓地にあるカードから1枚を選んで手札に戻せます。強かった部隊や装備をもう一度使いたい時に。',
+  guidance:'発動すると、まず移動元の旗をタップ。旗に2枚ある場合はどちらを動かすか選べる（1枚しかない場合は自動でそれが選ばれる）。最後に移動先の旗をタップすれば、そのカードを別の旗へ移し替えられます。ヘッダーの山札・墓地アイコンをタップすれば、移動させずにそのまま捨てることもできます。',
+  inspire:'発動すると、このカードを除く今の手札にある部隊・力の装備の数字がすべて+3されます（最大10まで）。強い役や換装条件を狙いやすくなります。',
+  duplicate:'発動後、複製したい手札のカードをタップ。そのカードのコピーが手札に加わります（複製もとのカードはそのまま残ります）。',
+  fusion:'発動後、手札の部隊カードを2枚タップして選択。高い方は必ず10になり、低い方はその上がった分だけさらに下がります（例：4と8→2と10、4と7→1と10）。マーク（色）はそれぞれ元のカードのまま引き継がれます。',
+};
+
+/* ---- monster cards ---- */
+const MONSTERS = [
+  {sub:'number', value:4, count:1},
+  {sub:'number', value:5, count:1},
+  {sub:'number', value:6, count:1},
+  {sub:'number', value:7, count:1},
+  {sub:'number', value:8, count:1},
+  {sub:'number', value:9, count:1},
+  {sub:'mark', color:'red', count:1},
+  {sub:'mark', color:'orange', count:1},
+  {sub:'mark', color:'yellow', count:1},
+  {sub:'mark', color:'green', count:1},
+  {sub:'mark', color:'blue', count:1},
+  {sub:'mark', color:'purple', count:1},
+  {sub:'necro', count:1},
+];
+function monsterName(m){
+  if(m.sub==='necro') return '鍛治職人';
+  if(m.sub==='combined') return `${CNAME[m.color]}・${m.value}以上の装備`;
+  if(m.sub==='number') return `${m.value}以上の力の装備`;
+  return `${CNAME[m.color]}の装備`;
+}
+function monsterBonusFor(m){
+  if(m.accumulatedBonus!=null) return m.accumulatedBonus;
+  return m.sub==='number' ? m.value : 5;
+}
+
+const GRADE_LIST=['D-','D','D+','C-','C','C+','B-','B','B+','A-','A','A+','S-','S','S+'];
+function flagGrade(base){
+  const maxRef=80;
+  const ratio=Math.max(0,Math.min(1,base/maxRef));
+  const idx=Math.min(GRADE_LIST.length-1, Math.floor(ratio*GRADE_LIST.length));
+  return GRADE_LIST[idx];
+}
+function isGlobalEffect(c){ return GLOBAL_TACTIC_TYPES.includes(c.type) || c.sub==='necro'; }
+function flagMonster(f){ return f.cards.find(c=>c&&c.kind==='monster'); }
+
+/* ================= STATE ================= */
+let activeDeck=[], grandDeck=[], hand=[], flags=[], graveyard=[];
+let score=0, totalScore=0, displayedScore=0, picked=null, pending=null, gameEnded=false, busy=false, infoIdx=null, bestTotal=0, turnCounter=0;
+const HIGH_SCORE_KEY='soloSiegeHighScore';
+function loadHighScore(charId){
+  try{ return parseInt(localStorage.getItem(HIGH_SCORE_KEY+'_'+charId))||0; } catch(e){ return 0; }
+}
+function saveHighScore(charId, v){
+  try{ localStorage.setItem(HIGH_SCORE_KEY+'_'+charId, String(v)); } catch(e){}
+}
+function loadOverallHighScore(){
+  return Math.max(0, ...CHARACTERS.map(c=>loadHighScore(c.id)));
+}
+let stageIndex=0, waveAttempt=1, bossHp=0, displayedBossHp=0, victory=false, waveAdvancing=false, freeShuffles=0, rewardPicksRemaining=0, pendingRewardCards=[], handSlotBonus=0;
+const TURN_TIME_LIMIT_BASE=15, TURN_TIME_LIMIT_MIN=0.1;
+let totalWaves=0, immortalKills=0, carryDamage=0, comboTimeBonus=0;
+const IMMORTAL_KILLS_TO_WIN=5;
+function currentTimeLimit(){ return Math.max(TURN_TIME_LIMIT_MIN, TURN_TIME_LIMIT_BASE - totalWaves + comboTimeBonus); }
+let timeLeft=TURN_TIME_LIMIT_BASE, timerInterval=null, anyDragActive=false;
+let uidN=1; const uid=()=>'u'+(uidN++);
+let justClosed=[];
+function cardDisplayName(c){
+  if(c.kind==='troop') return c.mixed ? `${CNAME[c.color]}${CNAME[c.altColor]}${c.value}` : `${CNAME[c.color]}${c.value}`;
+  if(c.kind==='wild') return c.label||'万能カード';
+  if(c.kind==='monster') return monsterName(c);
+  return c.name||c.type;
+}
+
+function addScore(n){ score+=n; totalScore+=n; }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function drawFromPools(){
+  if(activeDeck.length===0){
+    if(grandDeck.length===0) return null;
+    activeDeck.push(...grandDeck);
+    grandDeck=[];
+    shuffle(activeDeck);
+  }
+  return activeDeck.pop();
+}
+const FLAG_GRID_COLS={4:2, 5:5, 6:3};
+const FLAG_COUNT_LABEL={4:'四つの旗', 5:'五つの旗', 6:'六つの旗'};
+function applyBoardGrid(){
+  const cols=FLAG_GRID_COLS[FLAG_COUNT]||3;
+  document.getElementById('board').style.gridTemplateColumns=`repeat(${cols}, 1fr)`;
+  const sub=document.getElementById('brandSub');
+  if(sub) sub.textContent=FLAG_COUNT_LABEL[FLAG_COUNT]||`${FLAG_COUNT}つの旗`;
+}
+function freshFlags(){
+  const arr=[]; for(let i=0;i<FLAG_COUNT;i++) arr.push({cards:[],closed:false,result:null,lockedUntil:0});
+  return arr;
+}
+function init(){
+  score=0; totalScore=0; displayedScore=0; picked=null; pending=null; gameEnded=false; busy=false; infoIdx=null; justClosed=[]; graveyard=[]; turnCounter=0; stageIndex=0; waveAttempt=1; victory=false; waveAdvancing=false; freeShuffles=CHARACTER.startShuffles; pendingRewardCards=[]; rewardPicksRemaining=0; handSlotBonus=0; totalWaves=0; immortalKills=0; carryDamage=0; comboTimeBonus=0;
+  bestTotal=loadHighScore(CHARACTER.id);
+  bossHp=WAVES[0].threshold;
+  displayedBossHp=bossHp;
+  FLAG_COUNT=CHARACTER.flags;
+  applyBoardGrid();
+  grandDeck=[];
+  COLORS.forEach(c=>{ for(let v=1;v<=10;v++) grandDeck.push({kind:'troop',color:c,value:v,uid:uid()}); });
+  TACTICS.forEach(t=>{
+    if(t.type==='alexander' && !CHARACTER.blueInf) return;
+    if(t.type==='darius' && !CHARACTER.redInf) return;
+    if(t.type!=='alexander' && t.type!=='darius' && !CHARACTER.tactics) return;
+    for(let i=0;i<t.count;i++) grandDeck.push({kind:'tactics',...t,uid:uid()});
+  });
+  if(CHARACTER.equipment){
+    MONSTERS.forEach(m=>{ for(let i=0;i<m.count;i++) grandDeck.push({kind:'monster',...m,uid:uid()}); });
+  }
+  shuffle(grandDeck);
+  activeDeck=[];
+  drawFromGrandDeck(WAVE_DRAW);
+  flags=freshFlags();
+  hand=[];
+  for(let i=0;i<currentHandMax();i++){ const c=drawFromPools(); if(c) hand.push(c); }
+  document.getElementById('bestTotalStat').textContent=bestTotal;
+  document.getElementById('topCharName').textContent=CHARACTER.name;
+  document.getElementById('topCharBest').textContent=bestTotal;
+  pickHowTip();
+  render(); layoutHand(true);
+  startTimer();
+}
+function drawFromGrandDeck(n){
+  for(let i=0;i<n && grandDeck.length>0;i++){
+    activeDeck.push(grandDeck.pop());
+  }
+}
+
+/* ================= RULES ================= */
+const val=c=>c.kind==='wild'?8:(c.kind==='monster'?((c.sub==='number'||c.sub==='combined')?c.value:0):c.value);
+function evaluate(f){
+  const cs=f.cards; if(cs.length<3) return null;
+  const sum=cs.reduce((s,c)=>s+(c.enemyPlaced?0:val(c)),0);
+  const v=cs.map(val).sort((a,b)=>a-b);
+  const colorSets=cs.map(cardColors);
+  const same=colorSets[0].some(color=>colorSets.every(set=>set.includes(color)));
+  const toak=new Set(v).size===1, run=!toak&&v[1]===v[0]+1&&v[2]===v[1]+1;
+  let name,mult;
+  if(run&&same){name='ウェッジ';mult=3;} else if(toak){name='ファランクス';mult=2.5;}
+  else if(same){name='バタリオン';mult=2;} else if(run){name='スカーミッシュ';mult=1.5;} else {name='ホスト';mult=1;}
+  return {name,mult,base:Math.round(sum*mult),sum};
+}
+function resultTier(result){
+  if(!result) return 'host';
+  if(result.isMonster) return 'monster';
+  if(result.mult>=3) return 'wedge';
+  if(result.mult>=2.5) return 'phalanx';
+  if(result.mult>=2) return 'battalion';
+  if(result.mult>=1.5) return 'skirmish';
+  return 'host';
+}
+function tierClass(mult){
+  if(mult>=3) return 'wedge';
+  if(mult>=2.5) return 'phalanx';
+  if(mult>=2) return 'battalion';
+  if(mult>=1.5) return 'skirmish';
+  return 'host';
+}
+function tierColor(mult){
+  return {wedge:'#e2c06a',phalanx:'#f0ead2',battalion:'#8ff0c4',skirmish:'#9fd0ff',host:'#cfcfcf'}[tierClass(mult)];
+}
+function tierColorByTier(tier){
+  return {wedge:'#e2c06a',phalanx:'#f0ead2',battalion:'#8ff0c4',skirmish:'#9fd0ff',host:'#cfcfcf',monster:'#e06aa8'}[tier]||'#cfcfcf';
+}
+
+function isLocked(f){ return f.lockedUntil>turnCounter; }
+function isAlexanderCard(c){ return c.type==='alexander' || c.short==='青♾️' || c.label==='青♾️'; }
+function isDariusCard(c){ return c.type==='darius' || c.short==='赤♾️' || c.label==='赤♾️'; }
+function isWildCard(c){ return c.kind==='wild' || isAlexanderCard(c) || isDariusCard(c); }
+function cardColors(c){ return c.mixed ? [c.color, c.altColor] : [c.color]; }
+function colorsMatch(c1, c2){ return cardColors(c1).some(x=>cardColors(c2).includes(x)); }
+function hexToRgba(hex, alpha){
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+function pastelize(hex, whiteMix){
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  const nr=Math.round(r+(255-r)*whiteMix), ng=Math.round(g+(255-g)*whiteMix), nb=Math.round(b+(255-b)*whiteMix);
+  return `rgb(${nr},${ng},${nb})`;
+}
+const MIXED_SHAPE='<circle cx="50" cy="50" r="34"/>';
+function sanitizeCard(c){
+  if(c.kind==='tactics' && !c.name){
+    let ref = TACTICS.find(t=>t.type===c.type);
+    if(!ref) ref = TACTICS.find(t=>t.type==='alexander');
+    c.type=ref.type; c.name=ref.name; c.short=ref.short; c.desc=ref.desc;
+  }
+  if(c.kind==='wild' && !c.label){
+    c.label='青♾️';
+  }
+  return c;
+}
+function sanitizeHandAndDeck(){
+  hand.forEach(sanitizeCard);
+  activeDeck.forEach(sanitizeCard);
+  flags.forEach(f=>{
+    f.cards = f.cards.filter(c=>c!=null);
+    f.cards.forEach(sanitizeCard);
+  });
+}
+function wildColor(c){
+  const isDarius = isDariusCard(c);
+  return isDarius ? '#e05a4a' : '#5aa8e0';
+}
+function satisfiesMonster(card, f){
+  const m=flagMonster(f); if(!m) return true;
+  if(isWildCard(card)) return true;
+  if(m.sub==='combined') return card.value>=m.value && card.color===m.color;
+  if(m.sub==='number') return card.value>=m.value;
+  if(m.sub==='mark') return card.color===m.color;
+  return true;
+}
+function fitsFormation(card, f){
+  if(!card) return false;
+  if(isWildCard(card)) return true;
+  const real=f.cards.filter(c=>c&&c.kind==='troop');
+  if(real.length===0) return true;
+  if(real.length===1){
+    const c0=real[0];
+    return colorsMatch(card,c0) || card.value===c0.value || Math.abs(card.value-c0.value)===1;
+  }
+  const [a,b]=real;
+  const concepts=[];
+  if(colorsMatch(a,b)) concepts.push('color');
+  if(a.value===b.value) concepts.push('number');
+  if(Math.abs(a.value-b.value)===1) concepts.push('sequence');
+  return concepts.some(concept=>{
+    if(concept==='color') return colorsMatch(card,a) || colorsMatch(card,b);
+    if(concept==='number') return card.value===a.value;
+    if(concept==='sequence'){
+      const vals=[a.value,b.value].sort((x,y)=>x-y);
+      return card.value===vals[0]-1 || card.value===vals[1]+1;
+    }
+    return false;
+  });
+}
+function cardSatisfiesEquipment(card, eq){
+  if(eq.sub==='combined') return card.value>=eq.value && card.color===eq.color;
+  if(eq.sub==='number') return card.value>=eq.value;
+  if(eq.sub==='mark') return card.color===eq.color;
+  return true;
+}
+function equipmentReachable(eq, f){
+  if(f.cards.length===0) return true;
+  for(const color of COLORS){
+    for(let v=1; v<=10; v++){
+      const hyp={kind:'troop', color, value:v};
+      if(fitsFormation(hyp, f) && cardSatisfiesEquipment(hyp, eq)) return true;
+    }
+  }
+  return false;
+}
+function targetsFor(card){
+  const out=[];
+  flags.forEach((f,i)=>{
+    if(card.type==='wipe'){
+      if(!isLocked(f) && f.cards.length>0) out.push(i);
+      return;
+    }
+    if(f.closed||isLocked(f)) return;
+    const mon=flagMonster(f);
+    if(card.kind==='troop'||isAlexanderCard(card)){
+      if(mon){ if(satisfiesMonster(card,f) && fitsFormation(card,f)) out.push(i); }
+      else if(f.cards.length<3 && fitsFormation(card,f)) out.push(i);
+    }
+    else if(isDariusCard(card)){
+      if(mon){ if(satisfiesMonster(card,f) && fitsFormation(card,f)) out.push(i); }
+      else if(f.cards.length===2 && fitsFormation(card,f)) out.push(i);
+    }
+    else if(card.kind==='monster' && card.sub!=='necro'){
+      if(mon){
+        if(card.sub==='number'){
+          const existingNum = (mon.sub==='number'||mon.sub==='combined') ? mon.value : -Infinity;
+          if(card.value>=existingNum) out.push(i);
+        } else if(card.sub==='mark'){
+          if(mon.sub==='number') out.push(i);
+        }
+      } else if(f.cards.length<3 && equipmentReachable(card, f)){
+        out.push(i);
+      }
+    }
+  });
+  return out;
+}
+function canPlayAnything(){
+  return hand.some(c=>targetsFor(c).length>0||isGlobalEffect(c)||(c.type==='guidance'&&guidanceTargets(0).length>0)||(c.type==='duplicate'&&hand.length>=2)||(c.type==='fusion'&&hand.filter(x=>x.kind==='troop').length>=2));
+}
+
+/* ================= AUTO REFILL ================= */
+function autoRefill(n){
+  const results=[];
+  for(let i=0;i<n;i++){
+    if(hand.length>=currentHandMax()) break;
+    const card=drawFromPools();
+    if(!card) break;
+    hand.push(card);
+    const fromEl = document.getElementById('deckPileBtn');
+    results.push({uid:card.uid, fromRect: fromEl?fromEl.getBoundingClientRect():null});
+  }
+  return results;
+}
+
+/* ================= ACTIONS ================= */
+function advanceTurn(usedCard){
+  turnCounter++;
+  flags.forEach(f=>{ if(f.lockedUntil && f.lockedUntil<=turnCounter) f.lockedUntil=0; });
+  resetTimer();
+}
+
+/* ================= TIME PRESSURE ================= */
+function anyModalOpen(){
+  return ['cardInfoBg','goalModal','cardListModal','endModal','rewardModal','confirmModal'].some(id=>{
+    const el=document.getElementById(id);
+    return el && el.style.display==='flex';
+  });
+}
+function updateTimerBar(){
+  const el=document.getElementById('timerFill'); if(!el) return;
+  const limit=currentTimeLimit();
+  const pct=Math.max(0,(timeLeft/limit)*100);
+  el.style.width=pct+'%';
+  const secEl=document.getElementById('clockSeconds');
+  if(secEl){
+    secEl.textContent=Math.max(0,timeLeft).toFixed(1);
+    secEl.classList.toggle('boosted', comboTimeBonus>0);
+  }
+  const urgent = !gameEnded && timeLeft<=5;
+  const critical = !gameEnded && timeLeft<=3;
+  el.classList.toggle('warn', urgent);
+  const bar=el.parentElement;
+  if(bar) bar.classList.toggle('urgent', urgent);
+  const vig=document.getElementById('urgencyVignette');
+  if(vig){ vig.classList.toggle('active', urgent); vig.classList.toggle('critical', critical); }
+  const shuffleBtn=document.getElementById('freeShuffleBtn');
+  if(shuffleBtn){
+    const shuffleUsable = CHARACTER.startShuffles===Infinity || freeShuffles>0;
+    shuffleBtn.classList.toggle('urgent-glow', urgent && shuffleUsable);
+  }
+  const cd=document.getElementById('countdownBig');
+  if(cd){
+    if(urgent && timeLeft>0){
+      const secs=Math.ceil(timeLeft);
+      if(cd.dataset.secs!==String(secs)){
+        cd.dataset.secs=String(secs);
+        cd.textContent=secs;
+        cd.classList.remove('show'); void cd.offsetWidth; cd.classList.add('show');
+        tone(critical?1046:784, 0.07, {type:'square', vol:0.08});
+      }
+    } else {
+      cd.classList.remove('show'); cd.dataset.secs='';
+    }
+  }
+}
+let timeCommentStage=0;
+function resetTimer(){ timeLeft=currentTimeLimit(); timeCommentStage=0; updateTimerBar(); }
+function checkTimeComment(){
+  if(CHARACTER.id!=='novice' && CHARACTER.id!=='general') return;
+  const limit=currentTimeLimit();
+  const frac=(limit-timeLeft)/limit;
+  const shuffleAvailable=(CHARACTER.startShuffles===Infinity)||freeShuffles>0;
+  if(timeCommentStage<1 && frac>=0.2){
+    showComment('まだ時間があるから、よく考えて。'); timeCommentStage=1;
+  } else if(timeCommentStage<2 && frac>=0.4){
+    showComment('いや、ちょっと急いだ方が良いかも。'); timeCommentStage=2;
+  } else if(timeCommentStage<3 && frac>=0.6){
+    showComment(shuffleAvailable?'無かったらシャッフルボタンを押してね。':'ああ！シャッフルできない！'); timeCommentStage=3; playSfx('warn');
+  } else if(timeCommentStage<4 && frac>=0.8){
+    showComment(shuffleAvailable?'早く！シャッフルボタンを押して！早く！！！':'早く！どこでもいいからカードを置いて！！'); timeCommentStage=4; playSfx('warn');
+  }
+}
+function startTimer(){
+  if(timerInterval) clearInterval(timerInterval);
+  timeLeft=currentTimeLimit(); timeCommentStage=0; updateTimerBar();
+  timerInterval=setInterval(()=>{
+    try{
+      if(gameEnded||busy||waveAdvancing||anyModalOpen()||pending||anyDragActive) return;
+      timeLeft-=0.1;
+      updateTimerBar();
+      checkTimeComment();
+      if(timeLeft<=0){
+        timeLeft=0;
+        autoPlaceRandom();
+      }
+    }catch(err){
+      console.error('timer tick error, recovering:', err);
+      busy=false; pending=null; waveAdvancing=false;
+    }
+  },100);
+}
+function autoPlaceRandom(){
+  if(gameEnded||busy||pending) return;
+  gameEnded=true; victory=false;
+  updateTimerBar();
+  const commentable = CHARACTER.id==='novice' || CHARACTER.id==='general';
+  if(commentable) showComment('ああー！タイムアップだー！');
+  setTimeout(()=>{
+    triggerDefeatFX(()=>{ showEnd(); });
+  }, commentable?1300:0);
+}
+function flagSymbolColor(f){
+  for(let i=f.cards.length-1;i>=0;i--){
+    if(f.cards[i].kind==='troop') return f.cards[i].color;
+  }
+  return null;
+}
+function closeCheck(fi, closedByEnemy){
+  const f=flags[fi];
+  if(!f.closed&&f.cards.length>=3){
+    f.closed=true; f.result=evaluate(f);
+    f.capturedByEnemy=!!closedByEnemy;
+    f.symbolColor = flagSymbolColor(f);
+    if(closedByEnemy){
+      const rawSum=f.cards.reduce((s,c)=>s+val(c),0);
+      f.result.timedOut=true;
+      f.result.base=-rawSum;
+      f.sheetSum=rawSum;
+      addScore(-rawSum);
+    } else {
+      addScore(f.result.base);
+      f.sheetSum = f.result.sum;
+    }
+    justClosed.push({fi, result:f.result, played:false});
+    if(!closedByEnemy && CHARACTER.combo && f.symbolColor){
+      const matchCount = flags.filter(g=>g.closed && !g.capturedByEnemy && g.symbolColor===f.symbolColor).length;
+      if(matchCount>=2){
+        comboTimeBonus+=0.25;
+        timeLeft+=0.25;
+        updateTimerBar();
+        playSfx('comboTime');
+      }
+    }
+    if(!closedByEnemy){
+      const tierSfx={host:'host',skirmish:'skirmish',battalion:'battalion',phalanx:'phalanx',wedge:'wedge'}[tierClass(f.result.mult)];
+      if(tierSfx) playSfx(tierSfx);
+    }
+    const purchasedUsed = f.cards.filter(c=>c.purchased);
+    if(purchasedUsed.length>0){
+      const names = purchasedUsed.map(c=>cardDisplayName(c)).join('・');
+      setTimeout(()=>hint(`景品でもらった${names}が壊れた…`, true), 400);
+    }
+  }
+}
+function computeMarkSynergyBonus(){
+  const groups={};
+  if(!CHARACTER.combo) return {bonus:0, details:[]};
+  flags.forEach(f=>{
+    if(f.closed && !f.capturedByEnemy && f.symbolColor){
+      (groups[f.symbolColor]=groups[f.symbolColor]||[]).push(f.sheetSum||0);
+    }
+  });
+  let bonus=0; const details=[];
+  Object.keys(groups).forEach(color=>{
+    const arr=groups[color];
+    if(arr.length>=2){
+      const sum=arr.reduce((a,b)=>a+b,0);
+      const b=sum*arr.length;
+      bonus+=b;
+      details.push({color, count:arr.length, sum, bonus:b});
+    }
+  });
+  return {bonus, details};
+}
+function animateBossHp(targetHp, duration){
+  duration=duration||500;
+  return new Promise(resolve=>{
+    const startHp=displayedBossHp, t0=performance.now();
+    function step(t){
+      const p=Math.min(1,(t-t0)/duration);
+      displayedBossHp = startHp + (targetHp-startHp)*p;
+      const wave=WAVES[stageIndex];
+      const bossPct=Math.max(0,(displayedBossHp/wave.threshold)*100);
+      const fillEl=document.getElementById('bossHpFill');
+      const numEl=document.getElementById('bossHpNum');
+      if(fillEl) fillEl.style.width=bossPct+'%';
+      if(numEl) numEl.textContent=Math.max(0,Math.round(displayedBossHp));
+      if(p<1) requestAnimationFrame(step); else { displayedBossHp=targetHp; resolve(); }
+    }
+    requestAnimationFrame(step);
+  });
+}
+function screenShake(){
+  const app=document.getElementById('appRoot');
+  if(!app) return;
+  app.classList.add('shake');
+  setTimeout(()=>app.classList.remove('shake'), 380);
+}
+function triggerDefeatFX(callback){
+  screenShake();
+  playSfx('defeat');
+  const flash=document.createElement('div');
+  flash.className='defeat-flash';
+  flash.innerHTML='<div class="defeat-text">敗北…</div>';
+  document.body.appendChild(flash);
+  requestAnimationFrame(()=>flash.classList.add('show'));
+  setTimeout(()=>{ screenShake(); }, 260);
+  setTimeout(()=>{
+    flash.classList.add('fade');
+    setTimeout(()=>{ flash.remove(); if(callback) callback(); }, 450);
+  }, 1000);
+}
+function triggerFinalBossDeathFX(callback){
+  screenShake();
+  playSfx('bossDefeat');
+  const flash=document.createElement('div');
+  flash.className='final-boss-flash';
+  flash.innerHTML='<div class="final-boss-burst"></div><div class="final-boss-text">勝った！<br>村は護られた！</div>';
+  document.body.appendChild(flash);
+  requestAnimationFrame(()=>flash.classList.add('show'));
+  setTimeout(()=>{ screenShake(); playSfx('bossHit'); }, 320);
+  setTimeout(()=>{ screenShake(); }, 760);
+  setTimeout(()=>{
+    flash.classList.add('fade');
+    setTimeout(()=>{ flash.remove(); if(callback) callback(); }, 500);
+  }, 2000);
+}
+function triggerBossAttackFX(dmgAmount, onImpact){
+  const boardEl=document.getElementById('board');
+  const hpEl=document.querySelector('.boss-hp-bar');
+  if(!boardEl || !hpEl){ onImpact(); return; }
+  const sRect=boardEl.getBoundingClientRect();
+  const hRect=hpEl.getBoundingClientRect();
+  const fly=document.createElement('div');
+  fly.className='boss-attack-fly';
+  fly.innerHTML=`<span class="baf-sword">⚔️</span><span class="baf-dmg">${dmgAmount}</span>`;
+  Object.assign(fly.style,{
+    left:(sRect.left+sRect.width/2)+'px',
+    top:(sRect.top+sRect.height/2)+'px'
+  });
+  document.body.appendChild(fly);
+  requestAnimationFrame(()=>{
+    fly.style.transition='left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1), transform .5s cubic-bezier(.4,0,.2,1)';
+    fly.style.left=(hRect.left+hRect.width/2)+'px';
+    fly.style.top=(hRect.top+hRect.height/2)+'px';
+    fly.style.transform='translate(-50%,-50%) scale(1.15) rotate(35deg)';
+  });
+  setTimeout(()=>{
+    fly.remove();
+    screenShake();
+    playSfx('bossHit');
+    onImpact();
+  }, 520);
+}
+function triggerSynergyFX(synergy){
+  const overlay=document.createElement('div');
+  overlay.className='synergy-overlay';
+  const lines=synergy.details.map(d=>`<div class="syn-line">${miniIcon(EMBLEM[d.color],CFILL[d.color])} ×${d.count}（合計${d.sum}）→ <b>+${d.bonus}</b></div>`).join('');
+  overlay.innerHTML=`<div class="syn-title">⚡ マーク一致ボーナス！</div>${lines}<div class="syn-total">+${synergy.bonus}</div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('show'));
+  setTimeout(()=>{ overlay.classList.remove('show'); overlay.classList.add('hide'); }, 2200);
+  setTimeout(()=>overlay.remove(), 2700);
+  screenFlash();
+  triggerComboVisualFX(synergy);
+}
+function triggerComboVisualFX(synergy){
+  synergy.details.forEach(d=>{
+    const matchingIdx = flags.map((f,i)=>({f,i})).filter(({f})=>f.closed && !f.capturedByEnemy && f.symbolColor===d.color).map(({i})=>i);
+    if(matchingIdx.length<2) return;
+    const els = matchingIdx.map(i=>document.querySelector(`.flag[data-index="${i}"]`)).filter(Boolean);
+    els.forEach(el=>el.classList.add('combo-glow'));
+    for(let k=0;k<els.length-1;k++) drawComboBeam(els[k], els[k+1], d.count);
+    setTimeout(()=>els.forEach(el=>el.classList.remove('combo-glow')), 2400);
+  });
+}
+function drawComboBeam(elA, elB, count){
+  const rA=elA.getBoundingClientRect(), rB=elB.getBoundingClientRect();
+  const x1=rA.left+rA.width/2, y1=rA.top+rA.height/2;
+  const x2=rB.left+rB.width/2, y2=rB.top+rB.height/2;
+  const dist=Math.hypot(x2-x1, y2-y1);
+  const angle=Math.atan2(y2-y1, x2-x1)*180/Math.PI;
+  const beam=document.createElement('div');
+  beam.className='combo-beam';
+  beam.style.left=x1+'px'; beam.style.top=y1+'px'; beam.style.width=dist+'px';
+  beam.style.transform=`rotate(${angle}deg)`;
+  document.body.appendChild(beam);
+  requestAnimationFrame(()=>beam.classList.add('show'));
+  const label=document.createElement('div');
+  label.className='combo-beam-label';
+  label.textContent='×'+count;
+  label.style.left=((x1+x2)/2)+'px'; label.style.top=((y1+y2)/2)+'px';
+  document.body.appendChild(label);
+  requestAnimationFrame(()=>label.classList.add('show'));
+  setTimeout(()=>{ beam.remove(); label.remove(); }, 2200);
+}
+function updateComboLiveLines(){
+  document.querySelectorAll('.combo-live-beam').forEach(el=>el.remove());
+  if(!CHARACTER.combo) return;
+  const liveGroups={};
+  flags.forEach((f,i)=>{
+    if(f.closed && !f.capturedByEnemy && f.symbolColor){
+      (liveGroups[f.symbolColor]=liveGroups[f.symbolColor]||[]).push(i);
+    }
+  });
+  Object.values(liveGroups).forEach(idxArr=>{
+    if(idxArr.length<2) return;
+    const els=idxArr.map(i=>document.querySelector(`.flag[data-index="${i}"]`)).filter(Boolean);
+    for(let k=0;k<els.length-1;k++){
+      const rA=els[k].getBoundingClientRect(), rB=els[k+1].getBoundingClientRect();
+      const x1=rA.left+rA.width/2, y1=rA.top+rA.height/2;
+      const x2=rB.left+rB.width/2, y2=rB.top+rB.height/2;
+      const dist=Math.hypot(x2-x1, y2-y1);
+      const angle=Math.atan2(y2-y1, x2-x1)*180/Math.PI;
+      const beam=document.createElement('div');
+      beam.className='combo-live-beam';
+      beam.style.left=x1+'px'; beam.style.top=y1+'px'; beam.style.width=dist+'px';
+      beam.style.transform=`rotate(${angle}deg)`;
+      document.body.appendChild(beam);
+    }
+  });
+}
+function endCheck(){
+  if(gameEnded) return;
+  const decksEmpty=activeDeck.length===0 && grandDeck.length===0;
+  const open=flags.filter(f=>!f.closed);
+  if(open.length===0){
+    checkWaveOutcome();
+    return;
+  }
+  if(decksEmpty&&(hand.length===0||!canPlayAnything())){
+    flags.forEach(f=>{ if(!f.closed&&f.cards.length){ const s=f.cards.reduce((a,c)=>a+val(c),0); addScore(s); f.result={name:'未完成',mult:1,base:s}; }});
+    gameEnded=true;
+    victory=false;
+    setTimeout(showEnd,600);
+  }
+}
+
+function checkWaveOutcome(){
+  if(gameEnded||waveAdvancing) return;
+  let synergyBonus=0;
+  try{
+    const synergy=computeMarkSynergyBonus();
+    if(synergy.bonus>0){
+      addScore(synergy.bonus);
+      synergyBonus=synergy.bonus;
+      triggerSynergyFX(synergy);
+      playSfx('combo');
+    }
+  } catch(err){
+    console.error('synergy bonus error:', err);
+  }
+  const hpBefore=bossHp;
+  const dealt=score;
+  bossHp=Math.max(0, bossHp-dealt);
+  totalWaves++;
+  const defeated = bossHp<=0;
+  carryDamage = defeated ? Math.max(0, dealt-hpBefore) : 0;
+  const wave=WAVES[stageIndex];
+  waveAdvancing=true; busy=true;
+  if(!defeated && waveAttempt>=CHARACTER.waveLimit){
+    hint(`${CHARACTER.waveLimit}WAVE以内に倒しきれなかった…心が折れた。`,true);
+    setTimeout(()=>{
+      triggerDefeatFX(()=>{
+        gameEnded=true; victory=false; updateTimerBar(); showEnd('wavelimit');
+      });
+    }, synergyBonus>0?2200:700);
+    return;
+  }
+  setTimeout(()=>{
+    const proceed=()=>finishWaveOutcome(defeated, wave);
+    if(dealt>0){
+      triggerBossAttackFX(dealt, ()=>{ animateBossHp(bossHp, 550).then(proceed); });
+    } else {
+      proceed();
+    }
+  }, synergyBonus>0?1800:250);
+}
+function finishWaveOutcome(defeated, wave){
+  if(defeated && wave.immortal){
+    immortalKills++;
+    if(immortalKills>=IMMORTAL_KILLS_TO_WIN){
+      hint(`ついに不死身の魔王を倒しきった…！（${immortalKills}度目）`,true);
+      setTimeout(()=>{
+        triggerFinalBossDeathFX(()=>{
+          gameEnded=true; victory=true; showEnd('finalvictory');
+        });
+      }, 650);
+      return;
+    }
+    hint(`不死身の魔王を倒した…が、魔王は再び立ち上がった！（${immortalKills}度目）`,true);
+  } else {
+    hint(defeated ? `ステージ${stageIndex+1} クリア！次のステージへ…${carryDamage>0?`（余剰${carryDamage}は次の敵へ）`:''}` : `ダメージを与えた！ボスはまだ倒れていない…`);
+  }
+  setTimeout(()=>{
+    if(defeated){
+      grantStageReward();
+    } else {
+      advanceWaveAttempt();
+    }
+  }, 650);
+}
+function grantStageReward(){
+  const ch=CHARACTER;
+  const commentable = ch.id==='novice' || ch.id==='general';
+  playSfx('bossDefeat');
+  if(ch.rewardMode==='redOnly'){
+    const data=TACTICS.find(t=>t.type==='darius');
+    pendingRewardCards.push({kind:'tactics',...data,uid:uid(),purchased:true});
+    hint('景品：赤♾️を獲得！次のステージの山札に加わる。');
+    if(commentable) showComment('よっしゃあ！赤インフィニティカードをゲットだ！');
+    setTimeout(advanceToNextStage, 900);
+    return;
+  }
+  if(commentable) showComment('やったー！景品はじっくり選んでね！');
+  setTimeout(()=>playSfx('reward'), 350);
+  rewardPicksRemaining=1;
+  showRewardPick();
+}
+function resolveMonsterDefeatByRef(mon, enemy){
+  const bonus=monsterBonusFor(mon);
+  if(!enemy) addScore(bonus);
+  graveyard.push(mon);
+  return {monster:mon, bonus, timedOut:!!enemy};
+}
+function triggerMonsterDefeatFX(fi, defeat){
+  if(defeat.timedOut){ hint(`${monsterName(defeat.monster)}の換装に成功したが、制限時間切れのため無効。`, true); return; }
+  const el=document.querySelector(`.flag[data-index="${fi}"]`);
+  if(!el) return;
+  el.classList.add('just-closed');
+  el.style.setProperty('--pulse-color', tierColorByTier('monster'));
+  setTimeout(()=>el.classList.remove('just-closed'), 800);
+  showCloseBanner(el, {result:{name:monsterName(defeat.monster)+' 換装成功', isMonster:true, base:defeat.bonus, sum:0, monsterBonus:defeat.bonus}});
+  particles(el, 'monster');
+}
+
+let npcCommentTimer=null;
+function showComment(text){
+  if(!text) return;
+  const el=document.getElementById('npcBubble'); if(!el) return;
+  el.textContent=text;
+  el.classList.add('show');
+  if(npcCommentTimer) clearTimeout(npcCommentTimer);
+  npcCommentTimer=setTimeout(()=>{ el.classList.remove('show'); }, 3800);
+}
+function showWildComment(card, f, realBefore){
+  if(isDariusCard(card)){
+    showComment('きたー！どんなカードの上でも置ける赤インフィニティカードだー！');
+    return;
+  }
+  if(realBefore===0){
+    showComment('青インフィニティカードか！次は好きなカードを置け！');
+  } else if(realBefore===1){
+    const real=f.cards.filter(c=>c.kind==='troop');
+    const c0=real[0]; const opts=[];
+    if(c0.value>1) opts.push(c0.value-1); if(c0.value<10) opts.push(c0.value+1);
+    showComment(`青インフィニティカードか！次は${opts.join('か')}か${CNAME[c0.color]}マークを置け！`);
+  } else if(realBefore===2){
+    const color=flagSymbolColor(f);
+    showComment(`青インフィニティカードか！次も3枚目を${CNAME[color]}マークで揃えたらコンボだ！！`);
+  }
+}
+function showPlacementComment(card, f, posBefore){
+  if(CHARACTER.id!=='novice' && CHARACTER.id!=='general') return;
+  if(isWildCard(card)){ showWildComment(card, f, posBefore); return; }
+  if(posBefore===0){
+    const v=card.value; const opts=[];
+    if(v>1) opts.push(v-1); if(v<10) opts.push(v+1);
+    showComment(`よっしゃ、${opts.join('か')}か${CNAME[card.color]}マークを置け！`);
+  } else if(posBefore===1){
+    const real=f.cards.filter(c=>c.kind==='troop');
+    const c0=real[0];
+    let concept=null;
+    if(c0.color===card.color) concept='color';
+    else if(c0.value===card.value) concept='number';
+    else if(Math.abs(c0.value-card.value)===1) concept='sequence';
+    if(concept==='sequence'){
+      const vals=[c0.value,card.value].sort((a,b)=>a-b); const opts=[];
+      if(vals[0]-1>=1) opts.push(vals[0]-1); if(vals[1]+1<=10) opts.push(vals[1]+1);
+      if(opts.length) showComment(`いいぞ！次は${opts.join('か')}で最後だ！`);
+    } else if(concept==='color'){
+      showComment(`いいぞ！次は${CNAME[card.color]}マークでもう1枚置けば最後だ！`);
+    } else if(concept==='number'){
+      showComment('いいぞ！次は同じ数字でもう1枚置けば最後だ！');
+    }
+  } else if(posBefore===2){
+    const real=f.cards.filter(c=>c.kind==='troop');
+    let msg='決まったーーーー！！';
+    if(real.length===3){
+      const [a,b,c]=real;
+      if(a.color===b.color && b.color===c.color) msg='よっしゃー！同色だー！';
+      else if(a.value===b.value && b.value===c.value) msg='同数字で決まった！';
+      else msg='決まったー！連番数字だー！';
+    }
+    showComment(msg);
+    if(CHARACTER.id==='general'){
+      const color=flagSymbolColor(f);
+      setTimeout(()=>showComment(`次も3枚目を${CNAME[color]}マークで揃えたらコンボだ！！`), 3800);
+    }
+  }
+}
+function playOnFlag(handIdx, fi, fromRect){
+  const card=hand[handIdx], f=flags[fi];
+  if(!targetsFor(card).includes(fi)){
+    if(card.kind==='monster'){
+      const existingMon=flagMonster(f);
+      if(existingMon && card.sub==='number' && (existingMon.sub==='number'||existingMon.sub==='combined') && card.value<existingMon.value){
+        hint(`重ねるなら${existingMon.value}以上の力の装備が必要です。`,true);
+      } else if(existingMon && card.sub==='mark' && existingMon.sub!=='number'){
+        hint('色の装備は、色の条件を含む装備には重ね掛けできません。',true);
+      } else if(!existingMon && f.cards.length<3 && !equipmentReachable(card, f)){
+        hint('既に置かれているカードと条件が矛盾するため、この旗には置けません。',true);
+      }
+    }
+    return false;
+  }
+  busy=true; picked=null;
+  if(card.kind==='troop'||isAlexanderCard(card)||isDariusCard(card)){
+    const placed=card.kind==='troop'?{kind:'troop',color:card.color,altColor:card.altColor,mixed:card.mixed,value:card.value,uid:card.uid,purchased:card.purchased}:{kind:'wild',color:'wild',label:card.short,uid:card.uid,purchased:card.purchased};
+    hand.splice(handIdx,1);
+    const mon=flagMonster(f);
+    const posBefore=f.cards.filter(c=>c.kind==='troop').length;
+    if(mon){ const midx=f.cards.indexOf(mon); f.cards[midx]=placed; }
+    else { f.cards.push(placed); }
+    showPlacementComment(card, f, posBefore);
+    playSfx('place');
+    advanceTurn(placed);
+    if(!mon) closeCheck(fi, false);
+    const refilled=autoRefill(1);
+    render(); layoutHand(false);
+    flyToUid(card.uid, fromRect, ()=>{
+      if(refilled[0]) layoutHand(false, refilled[0].uid, refilled[0].fromRect);
+      let defeat=null;
+      if(mon){ defeat=resolveMonsterDefeatByRef(mon, false); closeCheck(fi, false); }
+      busy=false; endCheck(); render();
+      if(defeat) triggerMonsterDefeatFX(fi, defeat);
+    });
+    return true;
+  }
+  if(card.kind==='monster'){
+    hand.splice(handIdx,1);
+    const existingMon=flagMonster(f);
+    if(existingMon){
+      const priorBonus = monsterBonusFor(existingMon);
+      const addedBonus = card.sub==='number' ? card.value : 5;
+      let value=existingMon.value, color=existingMon.color;
+      if(card.sub==='number') value=card.value;
+      else color=card.color;
+      const sub = (value!=null && color!=null) ? 'combined' : card.sub;
+      const newAccumulated = priorBonus+addedBonus;
+      const placed={kind:'monster', sub, value, color, uid:card.uid, accumulatedBonus:newAccumulated};
+      const midx=f.cards.indexOf(existingMon);
+      f.cards[midx]=placed;
+      graveyard.push(existingMon);
+      if(CHARACTER.id==='general' && card.sub==='number') showComment(`え！？更に${card.value}以上！？`);
+      advanceTurn(placed);
+      const refilled=autoRefill(1);
+      render(); layoutHand(false);
+      flyToUid(card.uid, fromRect, ()=>{
+        if(refilled[0]) layoutHand(false, refilled[0].uid, refilled[0].fromRect);
+        busy=false; hint(`${monsterName(placed)}に強化された！`); endCheck(); render();
+      });
+      return true;
+    }
+    const placed={kind:'monster', sub:card.sub, value:card.value, color:card.color, uid:card.uid};
+    f.cards.push(placed);
+    if(CHARACTER.id==='general'){
+      if(card.sub==='number') showComment(`おおっと！${card.value}以上置かないといけないぞ！大丈夫か！？`);
+      else if(card.sub==='mark') showComment(`お！${CNAME[card.color]}マークを置くのか！`);
+    }
+    playSfx('equipment');
+    advanceTurn(placed);
+    const refilled=autoRefill(1);
+    render(); layoutHand(false);
+    flyToUid(card.uid, fromRect, ()=>{
+      if(refilled[0]) layoutHand(false, refilled[0].uid, refilled[0].fromRect);
+      busy=false; hint(monsterName(card)+'が旗に装着された。'); endCheck(); render();
+    });
+    return true;
+  }
+  if(card.type==='wipe'){
+    const wasClosed=f.closed;
+    if(wasClosed && f.result){
+      score-=f.result.base; totalScore-=f.result.base;
+    }
+    const cleared=f.cards.splice(0, f.cards.length);
+    graveyard.push(...cleared);
+    f.closed=false; f.result=null; f.capturedByEnemy=false; f.symbolColor=null; f.sheetSum=0;
+    hand.splice(handIdx,1);
+    graveyard.push(card);
+    advanceTurn(card);
+    const refilled=autoRefill(1);
+    render(); layoutHand(false, refilled[0]&&refilled[0].uid, refilled[0]&&refilled[0].fromRect);
+    busy=false;
+    hint(wasClosed?'全滅：封鎖済みの旗を未封鎖に戻した。':'全滅：旗のカードをすべて墓地へ送った。');
+    endCheck(); return true;
+  }
+  busy=false; return false;
+}
+
+function useNecromancer(handIdx){
+  busy=true;
+  const used=hand.splice(handIdx,1)[0];
+  advanceTurn(used);
+  const revived=graveyard.filter(c=>c.kind==='monster' && c.sub!=='combined');
+  graveyard=graveyard.filter(c=>!(c.kind==='monster' && c.sub!=='combined'));
+  graveyard.push(used);
+  activeDeck.push(...revived); shuffle(activeDeck);
+  const refilled=autoRefill(1);
+  render(); layoutHand(false, refilled[0]&&refilled[0].uid, refilled[0]&&refilled[0].fromRect);
+  busy=false; hint(`鍛治職人：墓地の装備${revived.length}個が山札へ戻った。`); endCheck(); render();
+}
+
+function useGuidance(handIdx){
+  if(guidanceTargets(0).length===0) return hint('動かせるカードが盤面にありません。',true);
+  busy=false;
+  pending={type:'guidance', step:0, handUid:hand[handIdx].uid};
+  render();
+  hint('移動元の旗をタップ');
+}
+function useDuplicate(handIdx){
+  if(hand.length<2) return hint('複製できる他のカードがありません。',true);
+  busy=false;
+  pending={type:'duplicate', handIdx};
+  render();
+  hint('複製したい手札のカードをタップしてください。');
+}
+function useFusion(handIdx){
+  const troopCount=hand.filter(c=>c.kind==='troop').length;
+  if(troopCount<2) return hint('融合できる部隊カードが手札に2枚必要です。',true);
+  busy=false;
+  pending={type:'fusion', handIdx, chosen:[]};
+  render();
+  hint('融合する部隊カードを2枚タップしてください（0/2）。');
+}
+function fusionTap(idx){
+  const c=hand[idx];
+  if(idx===pending.handIdx || c.kind!=='troop') return;
+  const i=pending.chosen.indexOf(idx);
+  if(i>=0){ pending.chosen.splice(i,1); }
+  else if(pending.chosen.length<2){ pending.chosen.push(idx); }
+  render();
+  hint(`融合する部隊カードを2枚タップしてください（${pending.chosen.length}/2）。`);
+  if(pending.chosen.length===2) resolveFusion();
+}
+function resolveFusion(){
+  busy=true;
+  const [i1,i2]=pending.chosen.sort((a,b)=>a-b);
+  const cardA=hand[i2], cardB=hand[i1];
+  const usedIdx=pending.handIdx;
+  const used=hand[usedIdx];
+  const lo = cardA.value<=cardB.value ? cardA : cardB;
+  const hi = cardA.value<=cardB.value ? cardB : cardA;
+  const delta=10-hi.value;
+  const newHiVal=10;
+  const newLoVal=Math.max(1, lo.value-delta);
+  const newLo={kind:'troop', color:lo.color, altColor:lo.altColor, mixed:lo.mixed, value:newLoVal, uid:lo.uid};
+  const newHi={kind:'troop', color:hi.color, altColor:hi.altColor, mixed:hi.mixed, value:newHiVal, uid:hi.uid};
+  const idxLo=hand.indexOf(lo), idxHi=hand.indexOf(hi);
+  hand[idxLo]=newLo; hand[idxHi]=newHi;
+  hand.splice(hand.indexOf(used),1);
+  graveyard.push(used);
+  pending=null;
+  advanceTurn(used);
+  const refilled=autoRefill(1);
+  render(); layoutHand(false, refilled[0]&&refilled[0].uid, refilled[0]&&refilled[0].fromRect);
+  busy=false; endCheck(); render();
+  hint(`融合！${CNAME[lo.color]}${newLoVal}と${CNAME[hi.color]}${newHiVal}に分裂した。`);
+}
+function cancelPending(){
+  if(!pending || pending.type==='discard' || pending.type==='rehire') return;
+  pending=null; picked=null; busy=false;
+  render(); layoutHand(false);
+  hint('キャンセルしました。');
+}
+function discardGuidanceCard(target){
+  if(!pending || pending.type!=='guidance' || pending.step!==1) return false;
+  const handIdx=hand.findIndex(c=>c.uid===pending.handUid);
+  if(handIdx<0){
+    console.error('guidance: hand card not found for uid', pending.handUid);
+    pending=null; busy=false; render();
+    hint('誘導カードが見つかりませんでした。',true);
+    return true;
+  }
+  busy=true;
+  const src=flags[pending.from];
+  const card=src.cards.splice(pending.cardIdx,1)[0];
+  if(!card){
+    pending=null; busy=false; render();
+    hint('カードの選択が無効になっていました。もう一度お試しください。',true);
+    return true;
+  }
+  const usedGuidance=hand.splice(handIdx,1)[0];
+  graveyard.push(usedGuidance);
+  if(target==='grave'){ graveyard.push(card); } else { activeDeck.push(card); shuffle(activeDeck); }
+  pending=null;
+  advanceTurn(usedGuidance);
+  render(); layoutHand(false);
+  busy=false; endCheck(); render();
+  hint(target==='grave' ? `${cardDisplayName(card)}を墓地に捨てた。` : `${cardDisplayName(card)}を山札に戻した。`);
+  return true;
+}
+function guidanceTargets(step){
+  if(step===0) return flags.map((f,i)=>i).filter(i=>!flags[i].closed && flags[i].cards.length>0);
+  const from=pending.from;
+  const src=flags[from];
+  if(!src) return [];
+  const card=src.cards[pending.cardIdx];
+  if(!card) return [];
+  return flags.map((f,i)=>i).filter(i=>{
+    if(i===from || flags[i].closed || isLocked(flags[i])) return false;
+    if(flagMonster(flags[i])) return true;
+    return flags[i].cards.length<3 && fitsFormation(card, flags[i]);
+  });
+}
+function chooseGuidanceCard(cardIdx){
+  if(!pending || pending.type!=='guidance' || pending.step!=='choose') return;
+  pending.cardIdx=cardIdx;
+  pending.step=1;
+  render();
+  hint('移動先の旗をタップ（山札・墓地アイコンで捨てることも可能）');
+}
+function resolveGuidance(fi){
+ try{
+  if(pending.step===0){
+    if(!guidanceTargets(0).includes(fi)) return hint('その旗にはカードがありません。',true);
+    pending.from=fi;
+    if(flags[fi].cards.length===1){
+      pending.cardIdx=0; pending.step=1; render(); hint('移動先の旗をタップ（山札・墓地アイコンで捨てることも可能）');
+    } else {
+      pending.step='choose'; render(); hint('動かすカードをタップ（旗の中のカードを直接タップ）');
+    }
+    return;
+  }
+  if(!guidanceTargets(1).includes(fi)) return hint('そこには移動できません。',true);
+  const handIdx=hand.findIndex(c=>c.uid===pending.handUid);
+  if(handIdx<0){
+    console.error('guidance: hand card not found for uid', pending.handUid);
+    pending=null; busy=false; render();
+    hint('誘導カードが見つかりませんでした。',true);
+    return;
+  }
+  busy=true;
+  const src=flags[pending.from];
+  const card=src.cards.splice(pending.cardIdx,1)[0];
+  if(!card){
+    pending=null; busy=false; render();
+    hint('カードの選択が無効になっていました。もう一度お試しください。',true);
+    return;
+  }
+  const from=rectOfUid(card.uid);
+  const destFlag=flags[fi];
+  const destMonster=flagMonster(destFlag);
+  if(destMonster && card.kind==='monster'){
+    src.cards.splice(pending.cardIdx,0,card);
+    busy=false; pending=null; render();
+    hint('装備のある旗には移動できません。',true);
+    return;
+  }
+  if(destMonster && !satisfiesMonster(card,destFlag)){
+    src.cards.splice(pending.cardIdx,0,card);
+    busy=false; pending=null; render();
+    hint('その旗の装備の条件を満たせません。',true);
+    return;
+  }
+  if(destMonster && !fitsFormation(card,destFlag)){
+    src.cards.splice(pending.cardIdx,0,card);
+    busy=false; pending=null; render();
+    hint('旗の他のカードとの並び（色・数字・連番）の条件を満たせません。',true);
+    return;
+  }
+  if(destMonster){ const midx=destFlag.cards.indexOf(destMonster); destFlag.cards[midx]=card; }
+  else { destFlag.cards.push(card); }
+  const usedGuidance=hand.splice(handIdx,1)[0];
+  graveyard.push(usedGuidance);
+  pending=null;
+  advanceTurn(card);
+  const triggersDefeat = !!destMonster;
+  if(!triggersDefeat) closeCheck(fi, false);
+  const refilled=autoRefill(1);
+  render(); layoutHand(false);
+  flyToUid(card.uid, from, ()=>{
+    try{
+      if(refilled[0]) layoutHand(false, refilled[0].uid, refilled[0].fromRect);
+      let defeat=null;
+      if(triggersDefeat){
+        defeat=resolveMonsterDefeatByRef(destMonster, false);
+        closeCheck(fi, false);
+      }
+      busy=false; endCheck(); render();
+      if(defeat) triggerMonsterDefeatFX(fi, defeat);
+    } catch(err){
+      console.error('resolveGuidance callback error:', err);
+      busy=false; pending=null; render();
+    }
+  });
+ } catch(err){
+   console.error('resolveGuidance error:', err);
+   busy=false; pending=null; render();
+   hint('誘導でエラーが発生したため中断しました。',true);
+ }
+}
+
+function useScout(handIdx){
+  const troopIdx=[];
+  activeDeck.forEach((c,i)=>{ if(c.kind==='troop') troopIdx.push(i); });
+  if(troopIdx.length===0) return hint('部隊が尽きています。',true);
+  busy=true;
+  const used=hand.splice(handIdx,1)[0]; graveyard.push(used);
+  advanceTurn(used);
+  const n=Math.min(3,troopIdx.length), drawn=[];
+  for(let i=0;i<n;i++){
+    const idx=troopIdx.pop();
+    const c=activeDeck.splice(idx,1)[0];
+    hand.push(c); drawn.push(c);
+  }
+  const from=document.getElementById('deckPileBtn').getBoundingClientRect();
+  render(); drawn.forEach((c,i)=>setTimeout(()=>layoutHand(false,c.uid,from),i*90));
+  setTimeout(()=>{ pending={type:'discard',chosen:[]}; busy=false; render(); hint('捨てる手札を2枚タップ（0/2）'); }, 420);
+}
+function discardTap(idx){
+  const i=pending.chosen.indexOf(idx);
+  if(i>=0) pending.chosen.splice(i,1); else if(pending.chosen.length<2) pending.chosen.push(idx);
+  render(); hint(`捨てる手札を2枚タップ（${pending.chosen.length}/2）。選び終えたら確定。`);
+}
+function confirmDiscard(){
+  if(!pending || pending.type!=='discard' || pending.chosen.length!==2) return;
+  busy=true;
+  const uids=pending.chosen.map(i=>hand[i].uid);
+  uids.forEach(u=>{ const el=document.querySelector(`.hand [data-uid="${u}"]`); if(el){ el.style.transform+=' translateY(80px)'; el.style.opacity=0; } });
+  setTimeout(()=>{
+    const discarded=pending.chosen.map(i=>hand[i]);
+    graveyard.push(...discarded);
+    pending.chosen.sort((a,b)=>b-a).forEach(i=>hand.splice(i,1));
+    pending=null; busy=false; render(); layoutHand(false); hint(''); endCheck(); render();
+  },280);
+}
+
+function useShuffle(handIdx){
+  const used=hand.splice(handIdx,1)[0];
+  graveyard.push(used);
+  advanceTurn(used);
+  const refilled=autoRefill(1);
+  pending={type:'replace_select', chosen:[]};
+  busy=false;
+  render(); layoutHand(false, refilled[0]&&refilled[0].uid, refilled[0]&&refilled[0].fromRect);
+  hint('墓地に送って引き直したいカードをタップ（何枚でもOK）。選び終えたら確定。');
+}
+function replaceTap(idx){
+  const i=pending.chosen.indexOf(idx);
+  if(i>=0) pending.chosen.splice(i,1); else pending.chosen.push(idx);
+  render();
+  hint(`墓地に送って引き直したいカードをタップ（${pending.chosen.length}枚選択中）。選び終えたら確定。`);
+}
+function confirmReplace(){
+  if(!pending || pending.type!=='replace_select') return;
+  busy=true;
+  const chosen=pending.chosen.slice();
+  const uids=chosen.map(i=>hand[i].uid);
+  uids.forEach(u=>{ const el=document.querySelector(`.hand [data-uid="${u}"]`); if(el){ el.style.transform+=' translateY(80px)'; el.style.opacity=0; } });
+  setTimeout(()=>{
+    const discarded=chosen.map(i=>hand[i]);
+    graveyard.push(...discarded);
+    chosen.sort((a,b)=>b-a).forEach(i=>hand.splice(i,1));
+    pending=null;
+    const n=discarded.length, drawn=[];
+    for(let i=0;i<n;i++){
+      const c=drawFromPools();
+      if(!c) break;
+      hand.push(c); drawn.push(c);
+    }
+    const from=document.getElementById('deckPileBtn').getBoundingClientRect();
+    render(); drawn.forEach((c,i)=>setTimeout(()=>layoutHand(false,c.uid,from),i*60));
+    setTimeout(()=>{ busy=false; endCheck(); render(); hint(''); }, drawn.length*60+380);
+  },280);
+}
+function performFreeShuffle(){
+  busy=true;
+  activeDeck.push(...hand.splice(0));
+  shuffle(activeDeck);
+  advanceTurn(null);
+  const n=currentHandMax(), drawn=[];
+  for(let i=0;i<n;i++){
+    const c=drawFromPools();
+    if(!c) break;
+    hand.push(c); drawn.push(c);
+  }
+  const from=document.getElementById('deckPileBtn').getBoundingClientRect();
+  render(); drawn.forEach((c,i)=>setTimeout(()=>layoutHand(false,c.uid,from),i*60));
+  setTimeout(()=>{ busy=false; endCheck(); render(); }, drawn.length*60+380);
+}
+
+function useInspire(handIdx){
+  busy=true;
+  const used=hand.splice(handIdx,1)[0]; graveyard.push(used);
+  hand.forEach(c=>{
+    if(c.kind==='troop' || (c.kind==='monster' && (c.sub==='number'||c.sub==='combined'))) c.value=Math.min(10, c.value+3);
+  });
+  advanceTurn(used);
+  const refilled=autoRefill(1);
+  render(); layoutHand(false, refilled[0]&&refilled[0].uid, refilled[0]&&refilled[0].fromRect);
+  busy=false; hint('鼓舞：手札の数字がすべて+3された！'); endCheck(); render();
+}
+
+/* ================= RENDER ================= */
+function paintCard(d, c, mini){
+  d.dataset.uid=c.uid;
+  if(c.kind==='troop'){
+    if(c.mixed){
+      d.className='pcard mixed'+(mini?' mini':'');
+      const t1=pastelize(CFILL[c.color],0.8), t2=pastelize(CFILL[c.altColor],0.8);
+      d.style.background=`linear-gradient(90deg, ${t1} 0%, ${t1} 50%, ${t2} 50%, ${t2} 100%)`;
+      d.style.borderLeft=`3px solid ${CFILL[c.color]}`;
+      d.style.borderRight=`3px solid ${CFILL[c.altColor]}`;
+      d.innerHTML=`<div class="corner">${c.value}</div><div class="emblem mixed-emblem"><svg class="left-half" viewBox="0 0 100 100" fill="${CFILL[c.color]}" stroke="${CFILL[c.color]}">${MIXED_SHAPE}</svg><svg class="right-half" viewBox="0 0 100 100" fill="${CFILL[c.altColor]}" stroke="${CFILL[c.altColor]}">${MIXED_SHAPE}</svg></div>`;
+    } else {
+      d.className='pcard '+c.color+(mini?' mini':'');
+      d.innerHTML=`<div class="corner">${miniIcon(EMBLEM[c.color],CFILL[c.color])}${c.value}</div><div class="emblem"><svg viewBox="0 0 100 100" fill="${CFILL[c.color]}" stroke="${CFILL[c.color]}">${EMBLEM[c.color]}</svg></div>`;
+    }
+  } else if(c.kind==='wild'||isAlexanderCard(c)||isDariusCard(c)){
+    d.className='pcard wild'+(mini?' mini':'');
+    const lab=(c.label||c.short)+(c.purchased?'(景品)':'');
+    const wc=wildColor(c);
+    d.innerHTML=`<div class="corner">${miniIcon(EMBLEM.wild,wc)}8</div><div class="emblem"><svg viewBox="0 0 100 100" fill="${wc}">${EMBLEM.wild}</svg></div><div class="name">${lab}</div>`;
+  } else if(c.kind==='monster'){
+    if(c.sub==='necro'){
+      d.className='pcard monster necro'+(mini?' mini':'');
+      d.innerHTML=`<div class="ttitle">鍛治</div><div class="emblem"><svg viewBox="0 0 100 100" fill="#caa6e0">${EMBLEM.necro}</svg></div>`;
+    } else if(c.sub==='combined'){
+      d.className='pcard monster mark'+(mini?' mini':'');
+      d.innerHTML=`<div class="corner">${miniIcon(EMBLEM.sword,'#e07a9a')}${c.value}+</div><div class="emblem"><svg viewBox="0 0 100 100" fill="${CFILL[c.color]}" stroke="${CFILL[c.color]}">${EMBLEM[c.color]}</svg></div><div class="name">${CNAME[c.color]}・${c.value}+</div>`;
+    } else if(c.sub==='number'){
+      d.className='pcard monster'+(mini?' mini':'');
+      d.innerHTML=`<div class="corner">${miniIcon(EMBLEM.sword,'#e07a9a')}${c.value}+</div><div class="emblem"><svg viewBox="0 0 100 100" fill="#e07a9a" stroke="#e07a9a">${EMBLEM.sword}</svg></div>`;
+    } else {
+      d.className='pcard monster mark'+(mini?' mini':'');
+      d.innerHTML=`<div class="corner">${miniIcon(EMBLEM.armor,CFILL[c.color])}</div><div class="emblem"><svg viewBox="0 0 100 100" fill="${CFILL[c.color]}" stroke="${CFILL[c.color]}">${EMBLEM[c.color]}</svg></div><div class="name">${CNAME[c.color]}の装備</div>`;
+    }
+  } else {
+    d.className='pcard tactic'+(mini?' mini':'');
+    d.innerHTML=`<div class="ttitle">${c.short||c.name}</div><div class="emblem"><svg viewBox="0 0 100 100" fill="#f0a38a">${EMBLEM.tactic}</svg></div>`;
+  }
+  if(c.enemyPlaced) d.classList.add('enemy');
+  if(c.purchased) d.classList.add('purchased');
+}
+function cardEl(c, mini){
+  const d=document.createElement('div');
+  paintCard(d, c, mini);
+  return d;
+}
+function upcomingChipLabel(c){
+  if(c.kind==='troop') return `${miniIcon(EMBLEM[c.color],CFILL[c.color])}${c.value}`;
+  if(c.kind==='wild'||isAlexanderCard(c)||isDariusCard(c)) return `${miniIcon(EMBLEM.wild,wildColor(c))}8`;
+  if(c.kind==='monster'){
+    if(c.sub==='combined') return `${miniIcon(EMBLEM[c.color],CFILL[c.color])}${c.value}+`;
+    if(c.sub==='number') return `${miniIcon(EMBLEM.sword,'#e07a9a')}${c.value}+`;
+    if(c.sub==='mark') return `${miniIcon(EMBLEM[c.color],CFILL[c.color])}`;
+    return `${miniIcon(EMBLEM.necro,'#caa6e0')}`;
+  }
+  return c.short||c.name||'？';
+}
+function renderUpcoming(){
+  const row=document.getElementById('upcomingRow');
+  const rowOverflow=document.getElementById('upcomingRowOverflow');
+  const upcoming=activeDeck.slice(-10).reverse();
+  const mainChips=upcoming.slice(0,3);
+  const overflowChips=upcoming.slice(3);
+  row.innerHTML=mainChips.map(c=>`<div class="upcoming-chip">${upcomingChipLabel(c)}</div>`).join('');
+  if(rowOverflow){
+    rowOverflow.innerHTML=overflowChips.map(c=>`<div class="upcoming-chip">${upcomingChipLabel(c)}</div>`).join('');
+    rowOverflow.style.display=overflowChips.length?'flex':'none';
+  }
+}
+
+function render(){
+  sanitizeHandAndDeck();
+  document.getElementById('grandCount').textContent=grandDeck.length;
+  document.getElementById('deckCount').textContent=activeDeck.length;
+  renderUpcoming();
+  document.getElementById('freeShuffleCount').textContent=(CHARACTER.startShuffles===Infinity)?'∞':freeShuffles;
+  document.getElementById('freeShuffleBtn').disabled=!(CHARACTER.startShuffles===Infinity) && freeShuffles<=0;
+  document.getElementById('graveCount').textContent=graveyard.length;
+  const guidanceDiscardable = pending && pending.type==='guidance' && pending.step===1;
+  document.getElementById('deckPileBtn').classList.toggle('pile-choosable', guidanceDiscardable);
+  document.getElementById('gravePileBtn').classList.toggle('pile-choosable', guidanceDiscardable);
+  document.querySelector('.pilerow').classList.toggle('force-visible', guidanceDiscardable);
+  const wave=WAVES[stageIndex];
+  document.getElementById('waveTitle').textContent=`ステージ${stageIndex+1}・WAVE${waveAttempt}：${wave.name}${wave.immortal&&immortalKills>0?`（${immortalKills}度撃破）`:''}`;
+  const bossPct=Math.max(0,(displayedBossHp/wave.threshold)*100);
+  document.getElementById('bossHpFill').style.width=bossPct+'%';
+  document.getElementById('bossHpNum').textContent=Math.max(0,Math.round(displayedBossHp));
+  document.getElementById('bossHpMax').textContent=wave.threshold;
+  document.getElementById('totalStat').textContent=totalScore;
+  if(totalScore>bestTotal){ bestTotal=totalScore; saveHighScore(CHARACTER.id, bestTotal); }
+  document.getElementById('bestTotalStat').textContent=bestTotal;
+  animateScore();
+  updateTelops();
+  const liveSynergy=computeMarkSynergyBonus();
+  const comboPrevEl=document.getElementById('comboPreview');
+  if(liveSynergy.bonus>0){
+    comboPrevEl.style.display='';
+    document.getElementById('comboPreviewNum').textContent=score+liveSynergy.bonus;
+  } else {
+    comboPrevEl.style.display='none';
+  }
+
+  let targets=[];
+  if(pending&&pending.type==='guidance') targets=guidanceTargets(pending.step);
+  else if(picked!==null && !pending) targets=targetsFor(hand[picked]);
+  const highlighting=targets.length>0;
+
+  const board=document.getElementById('board'); board.innerHTML='';
+  const liveGroups={};
+  flags.forEach(f=>{
+    if(f.closed && !f.capturedByEnemy && f.symbolColor){
+      (liveGroups[f.symbolColor]=liveGroups[f.symbolColor]||[]).push(f);
+    }
+  });
+  const toTrigger=[];
+  flags.forEach((f,i)=>{
+    const d=document.createElement('div');
+    const locked=isLocked(f);
+    const captureClass=f.closed ? (f.capturedByEnemy?' enemy-captured':' player-captured') : '';
+    d.className='flag'+(f.closed?' closed':'')+(locked?' locked-turns':'')+captureClass;
+    d.dataset.index=i;
+    if(CHARACTER.combo && f.closed && !f.capturedByEnemy && f.symbolColor && liveGroups[f.symbolColor] && liveGroups[f.symbolColor].length>=2){
+      d.classList.add('combo-live');
+    }
+    if(highlighting) d.classList.add(targets.includes(i)?'drop-ok':'drop-no');
+    const jc=justClosed.find(j=>j.fi===i);
+    if(jc && !jc.played){
+      jc.played=true;
+      if(!jc.result.timedOut){
+        d.classList.add('just-closed');
+        d.style.setProperty('--pulse-color', tierColorByTier(resultTier(jc.result)));
+        toTrigger.push({el:d, jc});
+      }
+    }
+    let badge='';
+    const mon=flagMonster(f);
+    let bigResult=null;
+    if(f.result){
+      if(f.result.timedOut){
+        badge=`<div class="badge timeoutbadge">🚩 敵に奪われた（${f.result.base}）</div>`;
+      } else {
+        const markIcon = f.symbolColor ? miniIcon(EMBLEM[f.symbolColor], CFILL[f.symbolColor]) : '';
+        const inCombo = CHARACTER.combo && !f.capturedByEnemy && f.symbolColor && liveGroups[f.symbolColor] && liveGroups[f.symbolColor].length>=2;
+        const comboCount = inCombo ? liveGroups[f.symbolColor].length : 0;
+        const displayVal = inCombo ? f.result.base*comboCount : f.result.base;
+        const comboTag = inCombo ? `<span class="frb-combo-tag">×${comboCount}</span><span class="frb-time-tag">+🕐0.25</span>` : '';
+        bigResult=`<div class="flag-result-big${inCombo?' combo-boosted':''}">
+          <div class="frb-total">${markIcon}${displayVal}${comboTag}</div>
+          <div class="frb-name">${f.result.name}</div>
+          <div class="frb-grade">${flagGrade(f.result.base)}</div>
+        </div>`;
+      }
+    }
+    else if(locked) badge=`<div class="badge lockbadge">封鎖中 残り${f.lockedUntil-turnCounter}</div>`;
+    else if(mon) badge=`<div class="badge monbadge">⚔ ${monsterName(mon)}</div>`;
+    if(bigResult){
+      d.innerHTML=bigResult;
+    } else {
+      d.innerHTML=badge;
+      const st=document.createElement('div'); st.className='stack';
+      const choosingHere = pending && pending.type==='guidance' && pending.step==='choose' && pending.from===i;
+      if(choosingHere) st.classList.add('spread-choose');
+      for(let s=0;s<3;s++){
+        if(choosingHere && !f.cards[s]) continue;
+        const sl=document.createElement('div'); sl.className='slot'+(!f.closed&&s===f.cards.length?' next':'');
+        if(f.cards[s]){
+          sl.appendChild(cardEl(f.cards[s],true));
+          const alreadyChosen = pending && pending.type==='guidance' && pending.step===1 && pending.from===i && pending.cardIdx===s;
+          if(choosingHere || alreadyChosen){
+            sl.classList.add('choosable');
+            attachGuidanceCardDrag(sl, s, i);
+          }
+        }
+        st.appendChild(sl);
+      }
+      d.appendChild(st);
+    }
+    d.onclick=()=>tapFlag(i);
+    board.appendChild(d);
+  });
+  if(toTrigger.length){
+    requestAnimationFrame(()=>{ toTrigger.forEach(({el,jc})=>{ showCloseBanner(el,jc); particles(el,resultTier(jc.result)); }); });
+  }
+  if(justClosed.length) setTimeout(()=>{ justClosed=justClosed.filter(j=>!j.played); },1200);
+  requestAnimationFrame(updateComboLiveLines);
+
+  document.getElementById('handCount').textContent=`${hand.length} / ${currentHandMax()}`;
+  syncHandDom();
+}
+
+function syncHandDom(){
+  const wrap=document.getElementById('hand');
+  const keep=new Set(hand.map(c=>c.uid));
+  [...wrap.children].forEach(el=>{ if(!keep.has(el.dataset.uid)) el.remove(); });
+  hand.forEach((c,i)=>{
+    let el=wrap.querySelector(`[data-uid="${c.uid}"]`);
+    if(!el){ el=document.createElement('div'); wrap.appendChild(el); attachDrag(el); }
+    paintCard(el, c, false);
+    el.classList.toggle('picked', picked===i||(pending&&(pending.type==='discard'||pending.type==='replace_select'||pending.type==='fusion')&&pending.chosen.includes(i)));
+    el.classList.toggle('dim', false);
+  });
+}
+function layoutHand(instant, newUid, fromRect){
+  const wrap=document.getElementById('hand'); const n=hand.length;
+  const vw=Math.min(window.innerWidth, 460)-24, cw=80;
+  const scale = n<=6 ? 1 : Math.max(0.66, 6/n);
+  const effCw=cw*scale;
+  const spread=n>1?Math.min(60*scale,(vw-effCw)/(n-1)):0;
+  let newEl=null;
+  hand.forEach((c,i)=>{
+    const el=wrap.querySelector(`[data-uid="${c.uid}"]`); if(!el) return;
+    const k=i-(n-1)/2, x=k*spread, rot=k*4, y=Math.abs(k)*Math.abs(k)*2.2 + (picked===i?-16:0);
+    const t=`translate(${x}px,${y}px) rotate(${rot}deg) scale(${scale})`;
+    if(c.uid===newUid&&fromRect){
+      const hr=wrap.getBoundingClientRect();
+      el.style.transition='none';
+      el.style.transform=`translate(${fromRect.left+fromRect.width/2-hr.left}px,${fromRect.top-hr.top}px) scale(${scale*0.6})`;
+      el.style.opacity='0';
+      newEl=el; requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.transition=''; el.style.transform=t; el.style.opacity=''; }));
+    } else if(instant){ el.style.transition='none'; el.style.transform=t; requestAnimationFrame(()=>el.style.transition=''); }
+    else { el.style.transform=t; }
+    el.style.zIndex=10+i;
+  });
+  return newEl;
+}
+
+function rectOfUid(u){ const el=document.querySelector(`[data-uid="${u}"]`); return el?el.getBoundingClientRect():null; }
+function flyToUid(u, fromRect, done){
+  const dest=document.querySelector(`.board [data-uid="${u}"]`);
+  if(!dest||!fromRect){ done&&done(); return; }
+  const to=dest.getBoundingClientRect();
+  const c=dest.cloneNode(true); c.classList.add('flycard'); c.classList.remove('mini'); c.removeAttribute('data-uid');
+  Object.assign(c.style,{left:fromRect.left+'px',top:fromRect.top+'px',width:fromRect.width+'px',height:fromRect.height+'px',transition:'none'});
+  document.body.appendChild(c); dest.style.opacity='0';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.style.transition=''; c.style.left=to.left+'px'; c.style.top=to.top+'px'; c.style.width=to.width+'px'; c.style.height=to.height+'px'; }));
+  setTimeout(()=>{ c.remove(); dest.style.opacity=''; done&&done(); },360);
+}
+function particles(flagDiv, tier){
+  tier=tier||'host';
+  const color=tierColorByTier(tier);
+  const count = {wedge:18,phalanx:14,battalion:10,skirmish:8,host:5,monster:16}[tier]||5;
+  const spread = (tier==='wedge'||tier==='monster')?46:26;
+  for(let i=0;i<count;i++){ const p=document.createElement('div'); p.className='particle';
+    p.style.background=color; p.style.boxShadow='0 0 6px '+color;
+    const a=Math.random()*Math.PI*2, d=24+Math.random()*spread;
+    p.style.setProperty('--pt',`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px)`);
+    p.style.left=(44+Math.random()*12)+'%'; p.style.top=(48+Math.random()*12)+'%';
+    flagDiv.appendChild(p); setTimeout(()=>p.remove(),700); }
+  if(tier==='wedge') screenFlash();
+}
+function screenFlash(){
+  const f=document.createElement('div'); f.className='screenflash';
+  document.body.appendChild(f);
+  requestAnimationFrame(()=>{ f.style.transition='opacity .18s ease-out'; f.style.opacity='1';
+    setTimeout(()=>{ f.style.transition='opacity .5s ease-in'; f.style.opacity='0'; },160);
+  });
+  setTimeout(()=>f.remove(),700);
+}
+function showCloseBanner(flagEl, jc){
+  const r=jc.result;
+  const rect=flagEl.getBoundingClientRect();
+  const banner=document.createElement('div');
+  banner.className='closefx tier-'+resultTier(r);
+  const calc = r.isMonster ? `換装ボーナス` : `${r.sum} × ${r.mult}`;
+  banner.innerHTML=`<div class="cf-name">${r.name}</div><div class="cf-calc">${calc}</div><div class="cf-score">+${r.base}</div>`;
+  Object.assign(banner.style,{
+    left:(rect.left+rect.width/2)+'px', top:(rect.top+rect.height/2)+'px',
+    transform:'translate(-50%,-50%) scale(.55)', opacity:'0'
+  });
+  document.body.appendChild(banner);
+  requestAnimationFrame(()=>{
+    banner.style.transition='transform .3s cubic-bezier(.2,.8,.2,1), opacity .22s';
+    banner.style.transform='translate(-50%,-50%) scale(1)';
+    banner.style.opacity='1';
+  });
+  setTimeout(()=>{
+    banner.style.transition='transform .5s ease-in, opacity .5s ease-in, top .5s ease-in';
+    banner.style.top=(rect.top+rect.height/2-40)+'px';
+    banner.style.transform='translate(-50%,-50%) scale(.92)';
+    banner.style.opacity='0';
+  }, 950);
+  setTimeout(()=>banner.remove(), 1500);
+
+  const scoreEl=document.querySelector('.power-main');
+  if(scoreEl){
+    const sRect=scoreEl.getBoundingClientRect();
+    const fly=document.createElement('div');
+    fly.className='scorefly'; fly.textContent='+'+jc.result.base;
+    Object.assign(fly.style,{ left:(rect.left+rect.width/2)+'px', top:rect.top+'px', transform:'translate(-50%,-50%)', opacity:'0' });
+    document.body.appendChild(fly);
+    setTimeout(()=>{
+      fly.style.transition='left .45s cubic-bezier(.3,.6,.3,1), top .45s cubic-bezier(.3,.6,.3,1), opacity .45s, transform .45s';
+      fly.style.opacity='1';
+      requestAnimationFrame(()=>{
+        fly.style.left=(sRect.left+sRect.width/2)+'px';
+        fly.style.top=(sRect.top+sRect.height/2)+'px';
+        fly.style.transform='translate(-50%,-50%) scale(.4)';
+        fly.style.opacity='0';
+      });
+    }, 120);
+    setTimeout(()=>fly.remove(),650);
+  }
+}
+function animateScore(){
+  const el=document.getElementById('scoreNum'); if(displayedScore===score){ el.textContent=score; return; }
+  const from=displayedScore,to=score,t0=performance.now(); el.classList.add('bump');
+  (function step(t){ const p=Math.min(1,(t-t0)/500), e=1-Math.pow(1-p,3); el.textContent=Math.round(from+(to-from)*e);
+    if(p<1) requestAnimationFrame(step); else { displayedScore=to; el.classList.remove('bump'); } })(t0);
+}
+function hint(msg,warn){
+  const el=document.getElementById('hint');
+  el.classList.toggle('warn',!!warn);
+  el.textContent=msg||'';
+  if(msg){ setTimeout(()=>{ if(el.textContent===msg){ el.textContent=''; el.classList.remove('warn'); } }, warn?1700:2200); }
+}
+
+/* ---- always-on NOW telop ---- */
+const HOW_TIPS = {
+  beginner: '各シートに3つのカードを連番、同じ数、同じマークのいずれかで揃えよう。',
+  equip: '装備カードをシートに置いた場合は、それを上回る数や同じマークのカードを置かなければいけない。',
+  combo: '3枚目に置いたカードをシート毎に揃えると攻撃が倍増する',
+  tactics: '軍師カードには様々な効果があるぞ'
+};
+let currentHowTip = HOW_TIPS.beginner;
+function pickHowTip(){
+  if(!CHARACTER.equipment && !CHARACTER.combo && !CHARACTER.tactics){
+    currentHowTip = HOW_TIPS.beginner;
+    return;
+  }
+  if(CHARACTER.tactics){
+    if(totalWaves===0){ currentHowTip = HOW_TIPS.tactics; return; }
+    const pool=[HOW_TIPS.equip, HOW_TIPS.combo, HOW_TIPS.tactics];
+    currentHowTip = pool[Math.floor(Math.random()*pool.length)];
+    return;
+  }
+  const pool=[HOW_TIPS.equip, HOW_TIPS.combo];
+  currentHowTip = pool[Math.floor(Math.random()*pool.length)];
+}
+function nowText(){
+  if(gameEnded) return '戦役は終結。結果を確認しよう。';
+  if(pending&&pending.type==='discard') return `手札から捨てる2枚をタップしよう（${pending.chosen.length}/2）。選び終えたら確定。`;
+  if(pending&&pending.type==='guidance') return pending.step===0 ? '移動元の旗をタップしよう。' : '移動先の旗をタップ（または山札・墓地アイコンで捨てる）。';
+  if(pending&&pending.type==='duplicate') return '複製したいカードをタップしよう。';
+  if(pending&&pending.type==='fusion') return `融合する部隊カードを2枚タップしよう（${pending.chosen.length}/2）。`;
+  if(picked!==null) return '緑に光っている旗へカードをドラッグ（またはタップ）して置こう。';
+  return currentHowTip;
+}
+function updateTelops(){
+  document.getElementById('telopNow').textContent=nowText();
+  document.getElementById('cancelPendingBtn').style.display = (pending && pending.type!=='discard' && pending.type!=='rehire') ? '' : 'none';
+  document.getElementById('confirmPendingBtn').style.display = (pending && (pending.type==='replace_select' || (pending.type==='discard' && pending.chosen.length===2))) ? '' : 'none';
+}
+
+/* ---- card info overlay ---- */
+function cardInfoContent(c){
+  if(c.kind==='troop'){
+    const cname=CNAME[c.color], lo=Math.max(1,c.value-1), hi=Math.min(10,c.value+1);
+    return `<p><b>${cname}・強さ${c.value}</b></p>
+      <p>同じ色（${cname}）を3枚集めると「バタリオン」(×2)。さらに<b>連番</b>なら最強の「ウェッジ」(×3)。</p>
+      <p>色を問わず同じ数字「${c.value}」が3枚なら「ファランクス」(×2.5)。</p>
+      <p>色バラでも数字${lo}や${hi}と並べれば「スカーミッシュ」(×1.5)も狙えます。</p>`;
+  }
+  if(c.kind==='monster'){
+    if(c.sub==='necro'){
+      return `<p><b>鍛治職人</b></p><p>発動すると、墓地にある装備が全て山札に戻ります（獲得済みの得点はそのまま）。</p>`;
+    }
+    if(c.sub==='combined'){
+      return `<p><b>${CNAME[c.color]}・${c.value}以上の装備</b></p><p>旗に置くと、その旗には<b>${CNAME[c.color]}の色</b>かつ<b>強さ${c.value}以上</b>の両方を満たすカードしか置けなくなります。条件を満たすカードを1枚置くと即座に換装成功、<b>装備だけが墓地へ送られ</b>（置いたカードはそのまま残ります）、その後は制限なく普通に置けるようになります。換装ボーナス <b>+${monsterBonusFor(c)}</b>（これまで重ねた分の合計）。</p>`;
+    }
+    if(c.sub==='number'){
+      return `<p><b>${c.value}以上の力の装備</b></p><p>旗に置くと、その旗には強さ${c.value}以上のカードしか置けなくなります。条件を満たすカードを1枚置くと即座に換装成功、<b>装備だけが墓地へ送られ</b>（置いたカードはそのまま残ります）、その後は制限なく普通に置けるようになります。換装ボーナス <b>+${monsterBonusFor(c)}</b>。別の<b>数の装備</b>（今の数字以上）か<b>色の装備</b>を重ねると<b style="color:var(--gold)">条件がさらに厳しくなり</b>、<b style="color:var(--danger)">換装ボーナスはこれまで重ねた分の合計</b>になります。<b style="color:var(--gold)">色の装備は1回だけ重ねられます</b>（色の条件を含む装備にはさらに重ねられません）。♾️カードは条件を完全に無視できるため、どんな数字の装備でも満たせます。</p>`;
+    }
+    return `<p><b>${CNAME[c.color]}の装備</b></p><p>旗に置くと、その旗には${CNAME[c.color]}のカードしか置けなくなります。条件を満たすカードを1枚置くと即座に換装成功、<b>装備だけが墓地へ送られ</b>（置いたカードはそのまま残ります）、その後は制限なく普通に置けるようになります。固定ボーナス <b>+${monsterBonusFor(c)}</b>。別の<b>数の装備</b>を重ねると<b style="color:var(--gold)">条件が組み合わさり</b>、<b style="color:var(--danger)">換装ボーナスはこれまで重ねた分の合計</b>になります。<b style="color:var(--gold)">色の装備をさらに重ねることはできません</b>。</p>`;
+  }
+  let extra;
+  if(isDariusCard(c)) extra=TACTIC_EXTRA.darius;
+  else if(isAlexanderCard(c)) extra=TACTIC_EXTRA.alexander;
+  else extra=TACTIC_EXTRA[c.type]||c.desc||'万能カード。強さ8として扱われ、旗の配置制限を無視できます。';
+  if(c.purchased) extra += '<br><b style="color:var(--danger)">景品なので、使ったら無くなります。</b>';
+  return `<p><b>${c.name||c.short||cardDisplayName(c)}</b></p><p>${extra}</p>`;
+}
+function showCardInfo(idx){
+  infoIdx=idx; const c=hand[idx];
+  const wrap=document.getElementById('ciCardWrap'); wrap.innerHTML='';
+  const el=cardEl(c,false); el.classList.add('big'); wrap.appendChild(el);
+  document.getElementById('ciText').innerHTML=cardInfoContent(c);
+  const primary=document.getElementById('ciPrimary');
+  if(GLOBAL_TACTIC_TYPES.includes(c.type)){ primary.style.display=''; primary.textContent='発動する'; }
+  else if(c.sub==='necro'){ primary.style.display=''; primary.textContent='発動する'; }
+  else if(c.type==='guidance'){ primary.style.display=''; primary.textContent='発動する'; }
+  else if(c.type==='duplicate'){ primary.style.display=''; primary.textContent='発動する'; }
+  else if(c.type==='fusion'){ primary.style.display=''; primary.textContent='発動する'; }
+  else { primary.style.display='none'; }
+  document.getElementById('cardInfoBg').style.display='flex';
+}
+function closeCardInfo(){ document.getElementById('cardInfoBg').style.display='none'; infoIdx=null; }
+
+/* ---- deck / graveyard inspection ---- */
+function showCardListModal(title, cards){
+  document.getElementById('cardListTitle').textContent=title;
+  const body=document.getElementById('cardListBody');
+  body.innerHTML='';
+  if(!cards.length){
+    body.innerHTML='<div class="cardlist-empty">カードはありません。</div>';
+    document.getElementById('cardListModal').style.display='flex';
+    return;
+  }
+  const kindOrder=c=> c.kind==='troop'?0 : c.kind==='monster'?1 : 2;
+  const sorted=cards.slice().sort((a,b)=>{
+    if(kindOrder(a)!==kindOrder(b)) return kindOrder(a)-kindOrder(b);
+    if(a.kind==='troop'){
+      if(a.color!==b.color) return COLORS.indexOf(a.color)-COLORS.indexOf(b.color);
+      return a.value-b.value;
+    }
+    if(a.kind==='monster') return (a.sub>b.sub) ? 1 : (a.sub<b.sub? -1 : (a.value||0)-(b.value||0));
+    return (a.type>b.type) ? 1 : -1;
+  });
+  const grid=document.createElement('div');
+  grid.className='cardgrid';
+  sorted.forEach(c=>{
+    const el=cardEl(c,true);
+    grid.appendChild(el);
+  });
+  body.appendChild(grid);
+  document.getElementById('cardListModal').style.display='flex';
+}
+function useRehire(handIdx){
+  if(graveyard.length===0) return hint('墓地にカードがありません。',true);
+  pending={type:'rehire', handIdx};
+  showRehirePicker();
+}
+function showRehirePicker(){
+  const body=document.getElementById('rehireBody');
+  body.innerHTML='';
+  const grid=document.createElement('div');
+  grid.className='cardgrid';
+  graveyard.forEach((c,i)=>{
+    const el=cardEl(c,true);
+    el.style.cursor='pointer';
+    el.onclick=()=>resolveRehire(i);
+    grid.appendChild(el);
+  });
+  body.appendChild(grid);
+  document.getElementById('rehireModal').style.display='flex';
+}
+function resolveRehire(idx){
+  const handIdx=pending.handIdx;
+  const used=hand[handIdx];
+  const pickedCard=graveyard.splice(idx,1)[0];
+  hand.splice(handIdx,1);
+  graveyard.push(used);
+  hand.push(pickedCard);
+  advanceTurn(used);
+  pending=null;
+  document.getElementById('rehireModal').style.display='none';
+  render(); layoutHand(false, pickedCard.uid);
+  hint(`${cardDisplayName(pickedCard)}を墓地から手札に戻した。`);
+  endCheck(); render();
+}
+
+/* ---- GOAL modal: formation examples + tactics list ---- */
+function exampleRow(container, cardDefs, name, mult, desc){
+  const row=document.createElement('div'); row.className='formation-example';
+  const cardsWrap=document.createElement('div'); cardsWrap.className='ex-cards';
+  cardDefs.forEach((c,i)=>{
+    const el=cardEl({kind:'troop',color:c.color,value:c.value,uid:'ex-'+name+i}, false);
+    el.classList.add('xs'); cardsWrap.appendChild(el);
+  });
+  const info=document.createElement('div'); info.className='ex-info';
+  info.innerHTML=`<div class="ex-name">${name} <span class="mult">×${mult}</span></div><div class="ex-desc">${desc}</div>`;
+  row.appendChild(cardsWrap); row.appendChild(info);
+  container.appendChild(row);
+}
+function exRow(container, cards, name, desc){
+  const row=document.createElement('div'); row.className='formation-example';
+  const cw=document.createElement('div'); cw.className='ex-cards';
+  cards.forEach((c,i)=>{
+    const el=cardEl({kind:'troop',...c,uid:'howto-ex'+Math.random()}, false); el.classList.add('xs');
+    cw.appendChild(el);
+  });
+  const info=document.createElement('div'); info.className='ex-info';
+  info.innerHTML=`<div class="ex-name">${name}</div><div class="ex-desc">${desc}</div>`;
+  row.appendChild(cw); row.appendChild(info);
+  container.appendChild(row);
+}
+function fillPage(id, html){
+  const wrap=document.getElementById(id); if(wrap.childElementCount||wrap.dataset.filled) return;
+  wrap.innerHTML=html; wrap.dataset.filled='1';
+}
+function buildHowtoPage(){
+  fillPage('howtoBasic', `<div class="howto-section" id="howtoBasicSec">
+    <p>6つの旗にカードを3枚ずつ揃えて<b style="color:var(--gold)">封鎖</b>し、役に応じた戦力で<b style="color:var(--danger)">ボスにダメージ</b>を与えよう。</p>
+    <p style="margin-top:8px;">6旗すべてが封鎖されると、その時点の戦力がまとめてボスのHPから引かれ、旗が空の状態に戻ってプレイが続く。</p>
+    <p style="margin-top:8px;"><b style="color:var(--gold)">ボスのHPが残っていれば同じステージのままWAVEだけ進み、手札はそのまま引き継がれる</b>。<b style="color:var(--gold)">ボスを倒すと次のステージへ進み、そこで初めて手札も一新</b>される。</p>
+    <p style="margin-top:8px;">ステージが進むごとに敵は強くなり、<b style="color:var(--danger)">制限時間はWAVEを重ねるごとに1秒ずつ短くなり続ける</b>（ステージが変わっても戻らない、下限0.1秒）。</p>
+    <p style="margin-top:8px;"><b style="color:var(--gold)">唯一の対抗手段がコンボ</b>：象徴の色が同じ旗を2つ以上つなげると、その場で制限時間が+0.25秒される（ヘッダーの時計の秒数に反映）。<b style="color:#f2a0cc">長く生き延びるにはコンボがほぼ必須</b>になる。</p>
+    <p style="margin-top:8px;">最後に待つ「不死身の魔王」は、<b style="color:#f2d97a">5回撃破するとついに完全勝利</b>——村は護られる。それまでは何度倒しても復活し続ける。</p>
+    <p style="margin-top:8px;"><b style="color:var(--danger)">ヘッダーのタイムバーが0になった瞬間にゲームオーバー</b>になるので、考えすぎず手を動かそう。</p>
+    <p style="margin-top:8px;">カードを1枚使うと自動で1枚補充される。山札・大山札・墓地はヘッダーのカードアイコンをタップすると中身の一覧が見られる。</p>
+  </div>`);
+  addBigResultDemo(document.getElementById('howtoBasicSec'), 'green', 39, 'バタリオン', 'C+', '旗が3枚揃って封鎖されると、こうして大きく合計値・役名・ランクが表示される。');
+  addVictoryDemo(document.getElementById('howtoBasicSec'));
+  addBigResultDemo(document.getElementById('howtoBasicSec'), 'green', 39, 'バタリオン', 'C+', '旗が3枚揃って封鎖されると、こうして大きく合計値・役名・ランクが表示される。');
+
+  fillPage('howtoPlacement', `<div class="howto-section" id="howtoPlacementSec"><p>部隊カードは、<b style="color:var(--gold)">色をそろえる・数字をそろえる・連番でつなげる</b>のいずれか1つのコンセプトで統一しないと置けない（最初の1枚は自由）。旗の中で1・2枚目が決めたコンセプトに、3枚目も従う必要がある（例：連番で始めたら、同じ色に切り替えて3枚目を置くことはできない）。万能カード（青♾️はどこでも、赤♾️は3枚目のみ）はこの制限を無視できる。</p></div>`);
+  exRow(document.getElementById('howtoPlacementSec'),
+    [{color:'green',value:4},{color:'blue',value:5},{color:'blue',value:6}],
+    'OKな例','緑4→青5→青6。4→5→6と数字がつながっているので、色が途中で変わっても「連番」のコンセプトとしてOK。');
+
+  fillPage('howtoEnemy', `<div class="howto-section" id="howtoEnemySec"><p>ヘッダーのタイムバーが尽きると、敵がその場でカードを作り出して旗に配置する（<b style="color:var(--danger)">赤い背景</b>で表示）。敵が3枚目を置いて旗を封鎖すると、<b style="color:var(--danger)">その旗の合計値がマイナス点として全体の戦力から引かれる</b>。自分が3枚目を置いて封鎖すれば得点になるが、その旗に含まれる敵のカードの数字は合計から除外される。</p></div>`);
+  addEnemyCardDemo(document.getElementById('howtoEnemySec'));
+
+  fillPage('howtoExchange', `<div class="howto-section" id="howtoExchangeSec"><p>手札のカードをタップすると説明が見られる。ドラッグで旗に置いてみよう。</p><p style="margin-top:8px;">6つの旗が全て埋まると自動で戦力が確定し、旗が空の状態に戻る。同時に<b style="color:var(--gold)">大山札</b>にある全てのカードがシャッフルされ、そこから40枚が山札に補充されてプレイが続く。<b style="color:var(--danger)">必要戦力に届いていなくても終了にはならず、そのまま次の敵と続けて戦う</b>。ヘッダーには次に引かれるカードが先読みで表示される。</p></div>`);
+
+  fillPage('howtoCombo', `<div class="howto-section" id="howtoComboSec"><p>旗を封鎖すると<b style="color:var(--gold)">最後（3枚目）に置いたカードの色</b>がその旗の「象徴」になる。WAVEの終わりに象徴の色が同じ旗が2つ以上あると、<b style="color:#f2a0cc">それらの合計値×一致数の大ボーナス</b>がそのままボスへのダメージに加算される。<b style="color:var(--gold)">ボスを倒してステージをクリアすると</b>、報酬選択のチャンスが1回もらえ、「いつでもシャッフル＋1（上限3）」「軍師カード2枚 or ♾️カード2枚（ランダム）」「手札のスペース+1（上限3）」から好きなものを選べる。獲得したカード（軍師・♾️）は次のステージの山札に確実に加わり、<b style="color:#e8b8d8">★マーク付きの特別な見た目</b>になる。使われるまで何ステージ経っても山札に残り続けるが、<b style="color:var(--danger)">一度使うと二度と戻ってこない</b>。</p></div>`);
+  exRow(document.getElementById('howtoComboSec'),
+    [{color:'blue',value:8},{color:'blue',value:4},{color:'blue',value:2}],
+    '例：象徴＝青14','この旗が青で締まると「象徴：青14」に。他の旗も青で締まれば合計値どうしが掛け合わされる。');
+  addComboMatchDemo(document.getElementById('howtoComboSec'));
+
+  fillPage('howtoTips', `<div class="howto-section" id="howtoTipsSec">
+    <p><b style="color:var(--gold)">・象徴を色で揃える</b><br>コンボ狙いなら、複数の旗をあえて同じ色で締めよう。結果画面では「基本合計→コンボボーナス→本当の合計」の順で、コンボがどれだけ稼いだか確認できる。</p>
+    <p style="margin-top:8px;"><b style="color:var(--gold)">・詰んだら「いつでもシャッフル」</b><br>タイマー横の🔄ボタンは、手札を山札に戻してシャッフルし直せる無料の権利（開始時に1つ）。カードは消費せず、山札の並び（次に引くカード）も変わる。使わなければ持ち越される。WAVE終了時にコンボを完成させると報酬として増やせる。</p>
+    <p style="margin-top:8px;"><b style="color:var(--gold)">・装備は連鎖で強化できる</b><br>数の装備の上にさらに数の装備を重ねると、条件がさらに厳しくなる代わりに、獲得できるボーナスはこれまで重ねた分の合計になる。無理に今すぐ換装せず、育てる選択もある。<b style="color:var(--danger)">色の装備は重ね掛けできない</b>（既に装備がある旗には置けない）。</p>
+  </div>`);
+  addComboMatchDemo(document.getElementById('howtoTipsSec'), 'この2つの旗のように象徴を揃えると、合計値どうしが掛け合わされて大きなボーナスになる。');
+}
+function addVictoryDemo(container){
+  const box=document.createElement('div');
+  box.style.cssText='margin-top:10px; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; border:1px solid var(--gold-3); border-radius:9px; padding:10px;';
+  box.innerHTML=`<span style="font-size:12px; color:var(--cream-2);">不死身の魔王</span><span style="color:var(--danger); font-weight:800; font-size:13px;">×5撃破</span><span style="color:var(--gold-2); font-weight:800;">→</span><span class="gradebig victory" style="font-size:17px;">勝った！</span>`;
+  container.appendChild(box);
+  const cap=document.createElement('p'); cap.style.cssText='font-size:11.5px; color:var(--cream-2); margin-top:6px; text-align:center;'; cap.textContent='不死身の魔王だけは、5回撃破するとついに息絶える。そこで初めてゲームクリアとなる。';
+  container.appendChild(cap);
+}
+function addBigResultDemo(container, color, total, name, grade, caption){
+  const box=document.createElement('div');
+  box.style.cssText='margin-top:10px; border:1px solid var(--gold-3); border-radius:9px; padding:10px; max-width:150px;';
+  box.innerHTML=`<div class="flag-result-big"><div class="frb-total">${miniIcon(EMBLEM[color],CFILL[color])}${total}</div><div class="frb-name">${name}</div><div class="frb-grade">${grade}</div></div>`;
+  container.appendChild(box);
+  const cap=document.createElement('p'); cap.style.cssText='font-size:11.5px; color:var(--cream-2); margin-top:6px;'; cap.textContent=caption;
+  container.appendChild(cap);
+}
+function addEnemyCardDemo(container){
+  const row=document.createElement('div'); row.className='formation-example';
+  const cw=document.createElement('div'); cw.className='ex-cards';
+  const c={kind:'troop', color:'orange', value:5, uid:'howto-enemy-ex', enemyPlaced:true};
+  const el=cardEl(c,false); el.classList.add('xs');
+  cw.appendChild(el);
+  const info=document.createElement('div'); info.className='ex-info';
+  info.innerHTML=`<div class="ex-name">敵が置いたカード</div><div class="ex-desc">赤い背景がついたカードは敵が時間切れで勝手に配置したもの。含まれる旗の合計値はマイナス点になる。</div>`;
+  row.appendChild(cw); row.appendChild(info);
+  container.appendChild(row);
+}
+function addComboMatchDemo(container, caption){
+  const box=document.createElement('div');
+  box.style.cssText='margin-top:10px; display:flex; align-items:center; justify-content:center; gap:10px;';
+  box.innerHTML=`<span class="ft-symbol combo">=${miniIcon(EMBLEM.blue,CFILL.blue)}14</span><span style="color:var(--gold-2); font-weight:800; font-size:15px;">×2</span><span class="ft-symbol combo">=${miniIcon(EMBLEM.blue,CFILL.blue)}20</span><span style="color:#f2a0cc; font-weight:800;">= +68</span>`;
+  container.appendChild(box);
+  if(caption){
+    const cap=document.createElement('p'); cap.style.cssText='font-size:11.5px; color:var(--cream-2); margin-top:6px; text-align:center;'; cap.textContent=caption;
+    container.appendChild(cap);
+  }
+}
+function buildFormationExamples(){
+  const wrap=document.getElementById('formationExamples'); if(wrap.childElementCount) return;
+  exampleRow(wrap,[{color:'green',value:4},{color:'green',value:5},{color:'green',value:6}],'ウェッジ',3,'同じ色で連番3枚。最強の役。');
+  exampleRow(wrap,[{color:'blue',value:7},{color:'purple',value:7},{color:'orange',value:7}],'ファランクス',2.5,'色を問わず同じ数字が3枚。');
+  exampleRow(wrap,[{color:'purple',value:2},{color:'purple',value:5},{color:'purple',value:9}],'バタリオン',2,'同じ色を3枚（連番でなくてOK）。');
+  exampleRow(wrap,[{color:'red',value:3},{color:'blue',value:4},{color:'yellow',value:5}],'スカーミッシュ',1.5,'色はバラバラでも数字が連番。');
+  exampleRow(wrap,[{color:'green',value:4},{color:'blue',value:5},{color:'red',value:5}],'ホスト',1,'色や数字がペアでつながっているだけの組み合わせ（緑4↔青5は連番、青5↔赤5は同じ数字。でも3枚まとめては同じ色・同じ数字・連番のどれにも当てはまらない）。');
+}
+function buildTacticsList(){
+  const wrap=document.getElementById('tacticsList'); if(wrap.childElementCount) return;
+  TACTICS.forEach(t=>{
+    const row=document.createElement('div'); row.className='formation-example';
+    const cardsWrap=document.createElement('div'); cardsWrap.className='ex-cards';
+    const el=cardEl({...t, uid:'tac-'+t.type}, false); el.classList.add('xs');
+    cardsWrap.appendChild(el);
+    const info=document.createElement('div'); info.className='ex-info';
+    info.innerHTML=`<div class="ex-name">${t.name}</div><div class="ex-desc">${TACTIC_EXTRA[t.type]}</div>`;
+    row.appendChild(cardsWrap); row.appendChild(info);
+    wrap.appendChild(row);
+  });
+}
+function buildMonsterList(){
+  const wrap=document.getElementById('monsterList'); if(wrap.childElementCount) return;
+  const entries=[
+    {card:{kind:'monster',sub:'number',value:7,uid:'mon-num'},
+     name:'力の装備', desc:'旗に置かれると、その旗には「表示された数字以上」の部隊しか置けなくなります。条件を満たすカードを1枚置くと即座に換装成功、装備だけが墓地へ送られます（置いたカードはそのまま残る）。その後は制限なく普通に置けるようになります。ボーナス得点が入ります（数字が大きいほど高得点）。'},
+    {card:{kind:'monster',sub:'mark',color:'blue',uid:'mon-mark'},
+     name:'色の装備', desc:'旗に置かれると、その旗には同じ色の部隊しか置けなくなります。条件を満たすカードを1枚置くと即座に換装成功、装備だけが墓地へ送られます（置いたカードはそのまま残る）。その後は制限なく普通に置けるようになります。固定のボーナス得点が入ります。'},
+    {card:{kind:'monster',sub:'necro',uid:'mon-necro'},
+     name:'鍛治職人', desc:'発動すると、墓地に送られた装備が全て山札に戻ります（すでに獲得した得点はそのまま）。手強い装備との再戦を挑みたい時に。'},
+  ];
+  entries.forEach(e=>{
+    const row=document.createElement('div'); row.className='formation-example';
+    const cardsWrap=document.createElement('div'); cardsWrap.className='ex-cards';
+    const el=cardEl(e.card, false); el.classList.add('xs');
+    cardsWrap.appendChild(el);
+    const info=document.createElement('div'); info.className='ex-info';
+    info.innerHTML=`<div class="ex-name">${e.name}</div><div class="ex-desc">${e.desc}</div>`;
+    row.appendChild(cardsWrap); row.appendChild(info);
+    wrap.appendChild(row);
+  });
+  const note=document.createElement('p');
+  note.style.cssText='font-size:11.5px; color:var(--cream-2); margin-top:8px; line-height:1.7;';
+  note.innerHTML='装備は山札から自動補充で手札に入ってくることがあります。手札に来たら、なるべく早く旗に配置しましょう（「全滅」で墓地へ送ることもできます）。';
+  wrap.appendChild(note);
+}
+function switchTopTab(tab){
+  document.querySelectorAll('.toptabbtn').forEach(b=>b.classList.toggle('active', b.dataset.toptab===tab));
+  document.querySelectorAll('.toppage').forEach(p=>p.style.display=(p.dataset.toppage===tab)?'':'none');
+}
+function switchSubTab(btn){
+  const container=btn.closest('.toppage');
+  container.querySelectorAll('.subtabbtn').forEach(b=>b.classList.toggle('active', b===btn));
+  container.querySelectorAll('.subpage').forEach(p=>p.style.display=(p.dataset.subpage===btn.dataset.subtab)?'':'none');
+}
+
+function populateResultModal(){
+  document.getElementById('finalScore').textContent=score;
+  const baseTotal=flags.reduce((s,f)=>s+(f.result?f.result.base:0),0);
+  const comboBonus=score-baseTotal;
+  document.getElementById('finalTotal').textContent=totalScore;
+  document.getElementById('bestScoreEnd').innerHTML=`ベスト <b>${bestTotal}</b>`;
+  document.getElementById('bestTotalStat').textContent=bestTotal;
+  const comboGroups={};
+  flags.forEach(f=>{
+    if(f.closed && !f.capturedByEnemy && f.symbolColor){
+      (comboGroups[f.symbolColor]=comboGroups[f.symbolColor]||[]).push(f.sheetSum||0);
+    }
+  });
+  const flagRows=flags.map((f,i)=>{
+    const isCombo = f.symbolColor && !f.capturedByEnemy && comboGroups[f.symbolColor] && comboGroups[f.symbolColor].length>=2;
+    const g=f.result?flagGrade(f.result.base):'-';
+    const label=f.result&&f.result.timedOut ? '🚩 敵に奪われた' : (f.result?f.result.name:'—');
+    const scoreTxt=f.result?`${f.result.base>=0?'+':''}${f.result.base}`:'+0';
+    let symbolTxt='';
+    if(f.capturedByEnemy && f.sheetSum){
+      symbolTxt=`<span class="ft-symbol" style="color:var(--danger);">=${miniIcon(EMBLEM[f.symbolColor]||EMBLEM.tactic,'#e05a4a')}-${f.sheetSum}</span>`;
+    } else if(f.symbolColor){
+      symbolTxt=`<span class="ft-symbol${isCombo?' combo':''}">=${miniIcon(EMBLEM[f.symbolColor],CFILL[f.symbolColor])}${f.sheetSum}</span>`;
+    }
+    const displayCards = (f.result && (f.result.name==='ウェッジ'||f.result.name==='スカーミッシュ') && f.cards.every(c=>c.kind==='troop'))
+      ? f.cards.slice().sort((a,b)=>a.value-b.value)
+      : f.cards;
+    const cardsLine=f.cards.length ? `<div class="ft-cards">${displayCards.map(cardShortLabel).join(' ')}${symbolTxt}</div>` : '';
+    return `<div class="ft-row"><div class="ft-head"><span>${ROMAN[i]}　${label} <span style="color:var(--gold-2);">[${g}]</span></span><b>${scoreTxt}</b></div>${cardsLine}</div>`;
+  }).join('');
+  const comboLines=Object.keys(comboGroups).filter(c=>comboGroups[c].length>=2).map(color=>{
+    const arr=comboGroups[color], sum=arr.reduce((a,b)=>a+b,0), bonus=sum*arr.length;
+    return `<div class="combo-summary">${miniIcon(EMBLEM[color],CFILL[color])} コンボ：${arr.join('+')} ×${arr.length} = <b>+${bonus}</b></div>`;
+  }).join('');
+  let recap='';
+  if(comboBonus!==0){
+    recap=`<div class="combo-recap">
+      <div>コンボなしの合計 <b>${baseTotal}</b></div>
+      <div style="color:#f2a0cc;">コンボボーナス <b style="color:#f2a0cc;">+${comboBonus}</b></div>
+      <div class="combo-recap-eq">${baseTotal} + ${comboBonus} = <b>${score}</b></div>
+    </div>`;
+  }
+  document.getElementById('flagTable').innerHTML=flagRows+comboLines+recap;
+}
+function showEnd(reason){
+  render();
+  bestTotal=Math.max(bestTotal,totalScore);
+  saveHighScore(CHARACTER.id, bestTotal);
+  const grEl=document.getElementById('finalGrade');
+  grEl.classList.remove('victory','defeat','wavename');
+  try{
+    if(reason==='finalvictory'){
+      document.getElementById('endTitle').textContent='勝った！村は護られた！';
+      grEl.textContent=`不死身の魔王 撃破×${immortalKills}`;
+      grEl.classList.add('victory');
+      document.getElementById('endSubline').textContent=`村人「ありがとうございました。」`;
+    } else if(reason==='wavelimit'){
+      document.getElementById('endTitle').textContent='心が折れた';
+      grEl.textContent=`ステージ${stageIndex+1}・WAVE${waveAttempt}`;
+      grEl.classList.add('defeat');
+      document.getElementById('endSubline').textContent=`${WAVES[stageIndex].name}を${CHARACTER.waveLimit}WAVE以内に倒しきれず、心が折れた。`;
+    } else if(reason==='giveup'){
+      document.getElementById('endTitle').textContent='GAME OVER';
+      grEl.textContent=`ステージ${stageIndex+1}・WAVE${waveAttempt}`;
+      grEl.classList.add('defeat');
+      document.getElementById('endSubline').textContent=`ギブアップ。ここまでの戦いを終える。`;
+    } else {
+      document.getElementById('endTitle').textContent='TIME UP';
+      grEl.textContent=`ステージ${stageIndex+1}・WAVE${waveAttempt}`;
+      grEl.classList.add('defeat');
+      document.getElementById('endSubline').textContent=`時間切れ。ここまでの戦いを終える。`+(immortalKills>0?`（不死身の魔王を${immortalKills}度撃破）`:'');
+    }
+    populateResultModal();
+    const END_HINTS={
+      novice:'ヒント：圧倒的な火力不足！装備カードやコンボが使える「生え抜きの将軍」に挑戦すると、もっと高得点を狙えるかも。',
+      general:'ヒント：圧倒的な火力不足！軍師カードまで使いこなす「歴戦の英雄」に挑戦すると、さらに戦略の幅が広がるかも。',
+      hero:'ヒント：圧倒的な火力不足！もう一度挑んで、自己ベストの更新を狙おう。',
+      king:'ヒント：圧倒的な火力不足！もう一度挑んで、自己ベストの更新を狙おう。',
+    };
+    const hintEl=document.getElementById('endHint');
+    let hintText = reason==='finalvictory' ? null : END_HINTS[CHARACTER.id];
+    if(reason!=='finalvictory' && CHARACTER.id==='hero' && stageIndex>=6){
+      hintText='ヒント：圧倒的な火力不足！まともにやっても絶対勝てない！！！';
+    }
+    if(hintText){ hintEl.innerHTML=hintText.replace('ヒント：','<b>ヒント：</b>'); hintEl.style.display=''; }
+    else { hintEl.style.display='none'; }
+  } catch(err){
+    console.error('showEnd error:', err);
+  } finally {
+    document.getElementById('endRestart').textContent = reason==='finalvictory' ? '次の村へ急ぐ' : 'もう一度、戦う';
+    document.getElementById('endRestart').style.display='';
+    document.getElementById('endModal').style.display='flex';
+  }
+}
+function rollRewardOptions(){
+  const tacticsPool = TACTICS.filter(t=>t.type!=='alexander'&&t.type!=='darius');
+  const wildPool = [TACTICS.find(t=>t.type==='alexander'), TACTICS.find(t=>t.type==='darius')].filter(t=>(t.type==='alexander'?CHARACTER.blueInf:CHARACTER.redInf));
+  const doubleType = (!CHARACTER.tactics || Math.random()<0.5) ? 'wild' : 'tactics';
+  const pool = doubleType==='wild' ? wildPool : tacticsPool;
+  const cardCount = doubleType==='wild' ? 1 : 2;
+  const cards=[];
+  for(let i=0;i<cardCount;i++) cards.push(pool[Math.floor(Math.random()*pool.length)]);
+  const options=[
+    {kind:'double_cards', cardType:doubleType, cards},
+  ];
+  if(CHARACTER.startShuffles!==Infinity && freeShuffles<CHARACTER.maxShuffles) options.unshift({kind:'shuffle_charge'});
+  if(handSlotBonus<CHARACTER.maxHandSlot) options.push({kind:'hand_slot'});
+  return options;
+}
+function showRewardPick(){
+  document.getElementById('rewardSub').textContent=`残り選択回数：${rewardPicksRemaining}`;
+  const options=rollRewardOptions();
+  const box=document.getElementById('rewardOptions');
+  box.innerHTML='';
+  options.forEach(opt=>{
+    const el=document.createElement('button');
+    el.className='reward-option';
+    if(opt.kind==='shuffle_charge'){
+      const maxed = freeShuffles>=CHARACTER.maxShuffles;
+      el.innerHTML=`<div class="reward-icon"><svg viewBox="0 0 100 100" fill="none" stroke="#8ff0c4" stroke-width="10"><path d="M20 35 A32 32 0 0 1 82 30 M80 65 A32 32 0 0 1 18 70"/><path d="M82 12 L82 30 L64 30 M18 88 L18 70 L36 70" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="reward-name">いつでもシャッフル+1${maxed?'（上限）':''}</div>`;
+    } else if(opt.kind==='double_cards'){
+      const isWild = opt.cardType==='wild';
+      const icons = opt.cards.map(c=>{
+        const color = isWild ? (c.type==='darius'?'#e05a4a':'#5aa8e0') : '#f0a38a';
+        const shape = isWild ? EMBLEM.wild : EMBLEM.tactic;
+        return `<svg viewBox="0 0 100 100" fill="${color}" style="width:26px;height:26px;">${shape}</svg>`;
+      }).join('');
+      const names = opt.cards.map(c=>c.name).join('<br>');
+      el.innerHTML=`<div class="reward-icon" style="display:flex;gap:2px;width:auto;">${icons}</div><div class="reward-name">${names}</div>`;
+    } else {
+      const maxed = handSlotBonus>=CHARACTER.maxHandSlot;
+      el.innerHTML=`<div class="reward-icon"><svg viewBox="0 0 100 100" fill="none" stroke="#e2c06a" stroke-width="8"><rect x="15" y="20" width="70" height="60" rx="8"/><path d="M50 40 L50 60 M40 50 L60 50" stroke-linecap="round"/></svg></div><div class="reward-name">手札+1${maxed?'（上限）':''}</div>`;
+    }
+    el.onclick=()=>resolveRewardPick(opt);
+    box.appendChild(el);
+  });
+  document.getElementById('rewardModal').style.display='flex';
+}
+function resolveRewardPick(opt){
+  document.getElementById('rewardModal').style.display='none';
+  if(opt.kind==='shuffle_charge'){
+    if(freeShuffles>=CHARACTER.maxShuffles){
+      hint(`いつでもシャッフルは上限（${CHARACTER.maxShuffles}）に達しています。`);
+    } else {
+      freeShuffles++;
+      hint('いつでもシャッフルを獲得！');
+    }
+  } else if(opt.kind==='double_cards'){
+    opt.cards.forEach(data=>{
+      pendingRewardCards.push({kind:'tactics',...data,uid:uid(),purchased:true});
+    });
+    hint(`${opt.cards[0].name}を${opt.cards.length}枚（購入品）獲得！次のステージの山札に加わる。`);
+  } else if(opt.kind==='hand_slot'){
+    if(handSlotBonus>=CHARACTER.maxHandSlot){
+      hint('手札の上限は既にMAXです。');
+    } else {
+      handSlotBonus++;
+      hint('手札のスペースが1つ増えた！');
+    }
+  }
+  rewardPicksRemaining--;
+  setTimeout(()=>{
+    if(rewardPicksRemaining>0) showRewardPick();
+    else advanceToNextStage();
+  }, 450);
+}
+function advanceWaveAttempt(){
+  waveAttempt++;
+  score=0; displayedScore=0;
+  flags.forEach(f=>{ graveyard.push(...f.cards); });
+  flags=freshFlags();
+  const persistent = activeDeck.filter(c=>c.purchased);
+  const toRecycle = activeDeck.filter(c=>!c.purchased);
+  const recyclable = graveyard.filter(c=>!(c.kind==='monster' && c.sub==='combined') && !c.purchased);
+  grandDeck.push(...toRecycle, ...recyclable);
+  activeDeck=persistent;
+  graveyard=[];
+  shuffle(grandDeck);
+  drawFromGrandDeck(WAVE_DRAW);
+  waveAdvancing=false; busy=false;
+  pickHowTip();
+  render(); layoutHand(false);
+  hint(`WAVE ${waveAttempt}：${WAVES[stageIndex].name}はまだ健在…手札はそのまま続行。`);
+  startTimer();
+}
+function advanceToNextStage(){
+  stageIndex=Math.min(stageIndex+1, WAVES.length-1);
+  waveAttempt=1;
+  const wave=WAVES[stageIndex];
+  const carriedIn=carryDamage;
+  bossHp=wave.threshold;
+  displayedBossHp=wave.threshold;
+  let chainedKill=false;
+  let finalHp=wave.threshold;
+  if(carriedIn>0){
+    finalHp=Math.max(0, wave.threshold-carriedIn);
+    carryDamage=Math.max(0, carriedIn-wave.threshold);
+    if(finalHp<=0) chainedKill=true;
+    bossHp=finalHp;
+  }
+  score=0; displayedScore=0;
+  flags.forEach(f=>{ graveyard.push(...f.cards); });
+  flags=freshFlags();
+  const handPersistent = hand.filter(c=>c.purchased);
+  const handToRecycle = hand.filter(c=>!c.purchased);
+  graveyard.push(...handToRecycle);
+  hand=[];
+  const persistent = activeDeck.filter(c=>c.purchased).concat(handPersistent);
+  const toRecycle = activeDeck.filter(c=>!c.purchased);
+  const recyclable = graveyard.filter(c=>!(c.kind==='monster' && c.sub==='combined') && !c.purchased);
+  grandDeck.push(...toRecycle, ...recyclable);
+  activeDeck=persistent;
+  graveyard=[];
+  shuffle(grandDeck);
+  drawFromGrandDeck(WAVE_DRAW);
+  activeDeck.push(...pendingRewardCards);
+  pendingRewardCards=[];
+  for(let i=0;i<currentHandMax();i++){ const c=drawFromPools(); if(c) hand.push(c); }
+  waveAdvancing=false; busy=false;
+  pickHowTip();
+  render(); layoutHand(true);
+  if(carriedIn>0){
+    hint(`前の戦いの余剰ダメージ${carriedIn}が${wave.name}を襲う！`,true);
+    waveAdvancing=true; busy=true;
+    setTimeout(()=>{
+      triggerBossAttackFX(carriedIn, ()=>{
+        animateBossHp(finalHp, 550).then(()=>{
+          if(chainedKill){
+            let wonNow=false;
+            if(wave.immortal){
+              immortalKills++;
+              if(immortalKills>=IMMORTAL_KILLS_TO_WIN){
+                wonNow=true;
+                hint(`貫通したダメージで、ついに不死身の魔王を倒しきった…！（${immortalKills}度目）`,true);
+              } else {
+                hint(`貫通したダメージで不死身の魔王も即撃破！（${immortalKills}度目）`,true);
+              }
+            } else {
+              hint(`貫通したダメージで${wave.name}も即座に撃破！`,true);
+            }
+            if(wonNow){
+              setTimeout(()=>{
+                triggerFinalBossDeathFX(()=>{
+                  gameEnded=true; victory=true; showEnd('finalvictory');
+                });
+              }, 700);
+            } else {
+              setTimeout(()=>{ grantStageReward(); }, 700);
+            }
+          } else {
+            waveAdvancing=false; busy=false;
+            hint(`ステージ${stageIndex+1}：${wave.name} 出現！`);
+            startTimer();
+          }
+        });
+      });
+    }, 900);
+    return;
+  }
+  hint(`ステージ${stageIndex+1}：${WAVES[stageIndex].name} 出現！`);
+  startTimer();
+}
+
+/* ================= INPUT ================= */
+function tapFlag(i){
+  if(busy||gameEnded) return;
+  if(pending&&pending.type==='guidance'){
+    if(pending.step==='choose') return;
+    resolveGuidance(i);
+    return;
+  }
+  if(pending) return;
+  if(picked===null) return;
+  const el=document.querySelector(`.hand [data-uid="${hand[picked].uid}"]`);
+  if(!playOnFlag(picked,i,el?cardVisualRect(el):null)) hint('その旗には置けません。',true);
+}
+function tapHand(idx){
+  if(busy||gameEnded) return;
+  if(pending&&pending.type==='discard'){ discardTap(idx); return; }
+  if(pending&&pending.type==='duplicate'){ resolveDuplicate(idx); return; }
+  if(pending&&pending.type==='fusion'){ fusionTap(idx); return; }
+  if(pending&&pending.type==='replace_select'){ replaceTap(idx); return; }
+  if(pending) return;
+  showCardInfo(idx);
+}
+function resolveDuplicate(idx){
+  if(idx===pending.handIdx) return hint('複製カード自身は選べません。',true);
+  busy=true;
+  const src=hand[idx];
+  const clone={...src, uid:uid()};
+  const usedIdx=pending.handIdx;
+  const used=hand[usedIdx];
+  const fromRect=rectOfUid(src.uid);
+  hand.splice(usedIdx,1);
+  graveyard.push(used);
+  hand.push(clone);
+  pending=null;
+  advanceTurn(used);
+  render(); layoutHand(false, clone.uid, fromRect);
+  busy=false; endCheck(); render();
+  hint('カードを複製しました。');
+}
+
+function cardVisualRect(el){
+  const r=el.getBoundingClientRect();
+  const cx=r.left+r.width/2, cy=r.top+r.height/2;
+  const w=el.offsetWidth, h=el.offsetHeight;
+  return {left:cx-w/2, top:cy-h/2, width:w, height:h};
+}
+function attachGuidanceCardDrag(el, cardIdx, flagIdx){
+  if(el.dataset.dragBound) return;
+  el.dataset.dragBound='1';
+  let sx,sy,dragging=false,ghost=null,startRect=null,hoverTarget=null;
+  el.addEventListener('pointerdown',e=>{
+    if(busy||gameEnded) return;
+    document.querySelectorAll('.dragcard').forEach(g=>g.remove());
+    sx=e.clientX; sy=e.clientY; dragging=false;
+    try{ el.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  el.addEventListener('pointermove',e=>{
+    if(busy) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(!dragging){
+      if(Math.hypot(dx,dy)<8) return;
+      dragging=true;
+      if(pending && pending.type==='guidance'){ pending.cardIdx=cardIdx; pending.from=flagIdx; pending.step=1; }
+      startRect=cardVisualRect(el.querySelector('.pcard')||el);
+      const srcCard=el.querySelector('.pcard');
+      ghost=srcCard?srcCard.cloneNode(true):el.cloneNode(true);
+      ghost.style.transform=''; ghost.removeAttribute('data-uid');
+      ghost.classList.add('dragcard');
+      ghost.style.position='fixed';
+      ghost.style.left=startRect.left+'px'; ghost.style.top=startRect.top+'px'; ghost.style.width=startRect.width+'px'; ghost.style.height=startRect.height+'px';
+      document.body.appendChild(ghost);
+    }
+    ghost.style.left=(startRect.left+dx)+'px'; ghost.style.top=(startRect.top+dy-30)+'px';
+    ghost.style.display='none';
+    const under=document.elementFromPoint(e.clientX,e.clientY-30);
+    ghost.style.display='';
+    const f=under?under.closest('.flag'):null;
+    const deckBtn=under?under.closest('#deckPileBtn'):null;
+    const graveBtn=under?under.closest('#gravePileBtn'):null;
+    if(hoverTarget && hoverTarget.el) hoverTarget.el.classList.remove('hover','pile-hover');
+    if(f && guidanceTargets(1).includes(+f.dataset.index)){
+      hoverTarget={type:'flag', fi:+f.dataset.index, el:f};
+      f.classList.add('hover');
+    } else if(deckBtn){
+      hoverTarget={type:'deck', el:deckBtn};
+      deckBtn.classList.add('pile-hover');
+    } else if(graveBtn){
+      hoverTarget={type:'grave', el:graveBtn};
+      graveBtn.classList.add('pile-hover');
+    } else {
+      hoverTarget=null;
+    }
+  });
+  const finish=e=>{
+    if(!dragging){
+      chooseGuidanceCard(cardIdx);
+      return;
+    }
+    dragging=false;
+    if(ghost){ ghost.remove(); ghost=null; }
+    const target=hoverTarget; hoverTarget=null;
+    if(target){
+      target.el.classList.remove('hover','pile-hover');
+      if(target.type==='flag') resolveGuidance(target.fi);
+      else if(target.type==='deck') discardGuidanceCard('deck');
+      else if(target.type==='grave') discardGuidanceCard('grave');
+    } else {
+      cancelPending();
+    }
+  };
+  el.addEventListener('pointerup',finish); el.addEventListener('pointercancel',finish);
+  el.addEventListener('lostpointercapture',()=>{
+    if(dragging){
+      dragging=false;
+      if(ghost){ ghost.remove(); ghost=null; }
+      if(hoverTarget && hoverTarget.el){ hoverTarget.el.classList.remove('hover','pile-hover'); hoverTarget=null; }
+      cancelPending();
+    }
+  });
+}
+function attachDrag(el){
+  let sx,sy,dragging=false,ghost=null,startRect=null,hoverFlag=null,idx=-1;
+  el.addEventListener('pointerdown',e=>{
+    if(busy||gameEnded||(pending&&pending.type!=='discard'&&pending.type!=='duplicate'&&pending.type!=='replace_select'&&pending.type!=='fusion')) return;
+    idx=hand.findIndex(c=>c.uid===el.dataset.uid); if(idx<0) return;
+    document.querySelectorAll('.dragcard').forEach(g=>g.remove());
+    sx=e.clientX; sy=e.clientY; dragging=false; el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove',e=>{
+    if(idx<0||busy) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(!dragging){
+      if(Math.hypot(dx,dy)<8) return;
+      if(pending) return;
+      const c=hand[idx];
+      dragging=true; picked=idx; anyDragActive=true; render();
+      startRect=cardVisualRect(el);
+      ghost=el.cloneNode(true);
+      ghost.style.transform=''; ghost.removeAttribute('data-uid');
+      ghost.classList.add('dragcard'); ghost.classList.remove('picked','dim');
+      ghost.style.left=startRect.left+'px'; ghost.style.top=startRect.top+'px'; ghost.style.width=startRect.width+'px'; ghost.style.height=startRect.height+'px';
+      document.body.appendChild(ghost); el.classList.add('ghost');
+    }
+    ghost.style.left=(startRect.left+dx)+'px'; ghost.style.top=(startRect.top+dy-30)+'px';
+    ghost.style.display='none';
+    let under=document.elementFromPoint(e.clientX,e.clientY-30);
+    if(!under || !under.closest('.flag')){
+      const alt=document.elementFromPoint(e.clientX,e.clientY);
+      if(alt && alt.closest('.flag')) under=alt;
+    }
+    ghost.style.display='';
+    const f=under?under.closest('.flag'):null;
+    if(hoverFlag&&hoverFlag!==f) hoverFlag.classList.remove('hover');
+    hoverFlag=(f&&f.classList.contains('drop-ok'))?f:null;
+    if(hoverFlag) hoverFlag.classList.add('hover');
+  });
+  const finish=e=>{
+    if(idx<0) return;
+    if(!dragging){ const i=idx; idx=-1; tapHand(i); return; }
+    dragging=false; const i=idx; idx=-1;
+    el.classList.remove('ghost');
+    try{
+      if(hoverFlag){ const fi=+hoverFlag.dataset.index; hoverFlag.classList.remove('hover');
+        const gr=cardVisualRect(ghost); ghost.remove(); ghost=null;
+        if(!playOnFlag(i,fi,gr)){ picked=null; render(); layoutHand(false); }
+      } else {
+        ghost.style.transition='left .25s, top .25s, transform .25s'; ghost.style.left=startRect.left+'px'; ghost.style.top=startRect.top+'px'; ghost.style.transform='none';
+        const g=ghost; ghost=null; setTimeout(()=>g.remove(),250);
+        picked=null; render(); layoutHand(false);
+      }
+    } finally {
+      if(ghost){ ghost.remove(); ghost=null; }
+      hoverFlag=null; anyDragActive=false;
+    }
+  };
+  el.addEventListener('pointerup',finish); el.addEventListener('pointercancel',finish);
+}
+
+document.getElementById('cardInfoBg').addEventListener('click', e=>{ if(e.target.id==='cardInfoBg') closeCardInfo(); });
+document.getElementById('ciClose').onclick=()=>closeCardInfo();
+document.getElementById('ciPrimary').onclick=()=>{
+  if(pending || busy) return;
+  const idx=infoIdx, c=hand[idx]; closeCardInfo();
+  if(!c) return;
+  if(c.type==='scout'){ useScout(idx); }
+  else if(c.type==='shuffle'){ useShuffle(idx); }
+  else if(c.type==='rehire'){ useRehire(idx); }
+  else if(c.type==='guidance'){ useGuidance(idx); }
+  else if(c.type==='inspire'){ useInspire(idx); }
+  else if(c.type==='duplicate'){ useDuplicate(idx); }
+  else if(c.type==='fusion'){ useFusion(idx); }
+  else if(c.sub==='necro'){ useNecromancer(idx); }
+  else {
+    if(targetsFor(c).length===0){ hint('置ける場所がありません。',true); return; }
+    picked=idx; render(); layoutHand(false);
+  }
+};
+document.getElementById('cancelPendingBtn').onclick=cancelPending;
+document.getElementById('confirmPendingBtn').onclick=()=>{
+  if(pending && pending.type==='discard') confirmDiscard();
+  else confirmReplace();
+};
+function showConfirm(message, onYes){
+  document.getElementById('confirmMsg').textContent=message;
+  document.getElementById('confirmModal').style.display='flex';
+  const yesBtn=document.getElementById('confirmYes');
+  const noBtn=document.getElementById('confirmNo');
+  const cleanup=()=>{ document.getElementById('confirmModal').style.display='none'; yesBtn.onclick=null; noBtn.onclick=null; };
+  yesBtn.onclick=()=>{ cleanup(); onYes(); };
+  noBtn.onclick=cleanup;
+}
+document.getElementById('giveupBtn').onclick=()=>{
+  if(gameEnded) return;
+  showConfirm('ここでギブアップしますか？現在の記録がそのまま結果になります。', ()=>{
+    gameEnded=true; victory=false;
+    updateTimerBar();
+    const commentable = CHARACTER.id==='novice' || CHARACTER.id==='general';
+    if(commentable) showComment('ああー！タイムアップだー！');
+    setTimeout(()=>showEnd('giveup'), commentable?1300:0);
+  });
+};
+document.getElementById('menuToTitleBtn').onclick=()=>{
+  document.getElementById('menuPanel').style.display='none';
+  showConfirm('タイトルへ戻りますか？現在の記録は失われます。', ()=>{
+    stopBgm();
+    if(timerInterval) clearInterval(timerInterval);
+    gameEnded=true;
+    document.getElementById('appRoot').style.display='none';
+    document.getElementById('charScreen').style.display='none';
+    document.getElementById('titleScreen').style.display='flex';
+  });
+};
+document.getElementById('freeShuffleBtn').onclick=()=>{
+  if(gameEnded||busy||pending) return;
+  if(!(CHARACTER.startShuffles===Infinity)){
+    if(freeShuffles<=0) return;
+    freeShuffles--;
+  }
+  hint('いつでもシャッフルを使った。');
+  playSfx('shuffle');
+  performFreeShuffle();
+  render();
+};
+document.getElementById('helpBtn').onclick=()=>{
+  try{ buildHowtoPage(); }catch(e){ console.error('buildHowtoPage error:',e); }
+  try{ buildFormationExamples(); }catch(e){ console.error('buildFormationExamples error:',e); }
+  try{ buildTacticsList(); }catch(e){ console.error('buildTacticsList error:',e); }
+  try{ buildMonsterList(); }catch(e){ console.error('buildMonsterList error:',e); }
+  document.getElementById('goalModal').style.display='flex';
+};
+document.getElementById('goalClose').onclick=()=>document.getElementById('goalModal').style.display='none';
+document.getElementById('goalModal').addEventListener('click', e=>{ if(e.target.id==='goalModal') e.currentTarget.style.display='none'; });
+document.querySelectorAll('.toptabbtn').forEach(b=>b.onclick=()=>switchTopTab(b.dataset.toptab));
+document.querySelectorAll('.subtabbtn').forEach(b=>b.onclick=()=>switchSubTab(b));
+document.getElementById('endRestart').onclick=()=>{
+  document.getElementById('endModal').style.display='none';
+  init();
+};
+document.getElementById('endChangeChar').onclick=()=>{
+  document.getElementById('endModal').style.display='none';
+  document.getElementById('appRoot').style.display='none';
+  stopBgm();
+  buildCharList();
+  document.getElementById('charScreen').style.display='flex';
+};
+document.getElementById('grandPileBtn').onclick=()=>showCardListModal('大山札', grandDeck);
+document.getElementById('deckPileBtn').onclick=()=>{ if(discardGuidanceCard('deck')) return; showCardListModal('山札', activeDeck); };
+document.getElementById('gravePileBtn').onclick=()=>{ if(discardGuidanceCard('grave')) return; showCardListModal('墓地', graveyard); };
+document.getElementById('cardListClose').onclick=()=>document.getElementById('cardListModal').style.display='none';
+document.getElementById('rehireCancel').onclick=()=>{
+  pending=null;
+  document.getElementById('rehireModal').style.display='none';
+};
+document.getElementById('cardListModal').addEventListener('click', e=>{ if(e.target.id==='cardListModal') e.currentTarget.style.display='none'; });
+window.addEventListener('resize',()=>layoutHand(true));
+document.getElementById('titleHighScore').textContent=loadOverallHighScore();
+function buildCharList(){
+  const wrap=document.getElementById('charList'); wrap.innerHTML='';
+  CHARACTERS.filter(ch=>!ch.hidden).forEach(ch=>{
+    const el=document.createElement('button'); el.className='char-card';
+    const chScore=loadHighScore(ch.id);
+    el.innerHTML=`<div class="char-hs">ベスト ${chScore}</div><div class="char-name">◆ ${ch.name}<small>${ch.rank}</small></div><div class="char-desc">${ch.desc}</div>`;
+    el.onclick=()=>{
+      CHARACTER=ch;
+      document.getElementById('charScreen').style.display='none';
+      document.getElementById('appRoot').style.display='';
+      init();
+      if(bgmEnabled) startBgm();
+    };
+    wrap.appendChild(el);
+  });
+}
+document.getElementById('titleStartBtn').onclick=()=>{
+  ensureAudio();
+  document.getElementById('titleScreen').style.display='none';
+  buildCharList();
+  document.getElementById('charScreen').style.display='flex';
+};
+document.getElementById('sfxToggleBtn').onclick=()=>{
+  sfxEnabled=!sfxEnabled;
+  localStorage.setItem('soloSiegeSfx', sfxEnabled?'on':'off');
+  updateSoundButtons();
+  if(sfxEnabled) playSfx('tap');
+};
+document.getElementById('bgmToggleBtn').onclick=()=>{
+  bgmEnabled=!bgmEnabled;
+  localStorage.setItem('soloSiegeBgm', bgmEnabled?'on':'off');
+  updateSoundButtons();
+  if(bgmEnabled) startBgm(); else stopBgm();
+};
+document.getElementById('titleSfxBtn').onclick=()=>{
+  ensureAudio();
+  sfxEnabled=!sfxEnabled;
+  localStorage.setItem('soloSiegeSfx', sfxEnabled?'on':'off');
+  updateSoundButtons();
+  if(sfxEnabled) playSfx('tap');
+};
+document.getElementById('titleBgmBtn').onclick=()=>{
+  bgmEnabled=!bgmEnabled;
+  localStorage.setItem('soloSiegeBgm', bgmEnabled?'on':'off');
+  updateSoundButtons();
+};
+document.getElementById('menuBtn').onclick=(e)=>{
+  e.stopPropagation();
+  const panel=document.getElementById('menuPanel');
+  panel.style.display = panel.style.display==='none' ? 'flex' : 'none';
+};
+document.getElementById('menuPanel').addEventListener('click', e=>e.stopPropagation());
+document.addEventListener('click', ()=>{
+  const panel=document.getElementById('menuPanel');
+  if(panel && panel.style.display!=='none') panel.style.display='none';
+});
+updateSoundButtons();
+document.getElementById('charBackBtn').onclick=()=>{
+  document.getElementById('charScreen').style.display='none';
+  document.getElementById('titleScreen').style.display='flex';
+};
+document.getElementById('titleHowtoBtn').onclick=()=>{
+  try{ buildHowtoPage(); }catch(e){ console.error('buildHowtoPage error:',e); }
+  try{ buildFormationExamples(); }catch(e){ console.error('buildFormationExamples error:',e); }
+  try{ buildTacticsList(); }catch(e){ console.error('buildTacticsList error:',e); }
+  try{ buildMonsterList(); }catch(e){ console.error('buildMonsterList error:',e); }
+  document.getElementById('goalModal').style.display='flex';
+};
+</script>
+</body>
+</html>
