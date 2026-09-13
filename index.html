@@ -373,7 +373,7 @@
     color:var(--cream-2); opacity:.8; font-family:'Noto Sans JP',sans-serif; white-space:nowrap;
   }
   .upcoming-chip .mini-mark{ width:13px; height:13px; }
-  .board-wrap{ position:relative; flex:1 1 auto; min-height:0; display:flex; align-items:flex-start; justify-content:center; overflow:hidden; }
+  .board-wrap{ position:relative; flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
   .board{ display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:auto; gap:8px; width:100%; }
   .flag{
     position:relative; border-radius:9px; padding:9px 6px 7px; min-height:0; display:flex; flex-direction:column; justify-content:center;
@@ -1227,7 +1227,30 @@ function applyBoardGrid(){
   document.getElementById('board').style.gridTemplateColumns=`repeat(${cols}, 1fr)`;
   const sub=document.getElementById('brandSub');
   if(sub) sub.textContent=FLAG_COUNT_LABEL[FLAG_COUNT]||`${FLAG_COUNT}つの旗`;
+  fitBoardSize();
 }
+function fitBoardSize(){
+  const board=document.getElementById('board');
+  const wrap=board && board.parentElement;
+  if(!board||!wrap) return;
+  const cols=FLAG_GRID_COLS[FLAG_COUNT]||3;
+  const rows=Math.ceil(FLAG_COUNT/cols)||1;
+  const gap=8;
+  const availW=wrap.clientWidth;
+  const availH=wrap.clientHeight;
+  if(availW<=0||availH<=0) return;
+  const ratio=1.35;
+  let cellW=(availW-gap*(cols-1))/cols;
+  let cellH=cellW/ratio;
+  const totalHByWidth=cellH*rows+gap*(rows-1);
+  if(totalHByWidth>availH){
+    cellH=(availH-gap*(rows-1))/rows;
+    cellW=cellH*ratio;
+  }
+  board.style.width=Math.max(0, cellW*cols+gap*(cols-1))+'px';
+  board.style.gridAutoRows=Math.max(0, cellH)+'px';
+}
+window.addEventListener('resize', ()=>{ try{ fitBoardSize(); }catch(e){} });
 function freshFlags(){
   const arr=[]; for(let i=0;i<FLAG_COUNT;i++) arr.push({cards:[],closed:false,result:null,lockedUntil:0});
   return arr;
