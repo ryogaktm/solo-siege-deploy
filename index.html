@@ -2,8 +2,29 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ソロ・シージ ― 九つの旗</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ソロ・シージ">
+<meta name="theme-color" content="#123a2b">
+<!-- Google Analytics (GA4) — 測定IDは同じフォルダの ga-config.js で管理 -->
+<script src="ga-config.js"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  if(window.GA_MEASUREMENT_ID){
+    var gaLoader=document.createElement('script');
+    gaLoader.async=true;
+    gaLoader.src='https://www.googletagmanager.com/gtag/js?id='+window.GA_MEASUREMENT_ID;
+    document.head.appendChild(gaLoader);
+    gtag('config', window.GA_MEASUREMENT_ID);
+  }
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@600;800&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -354,15 +375,15 @@
     color:var(--cream-2); opacity:.8; font-family:'Noto Sans JP',sans-serif; white-space:nowrap;
   }
   .upcoming-chip .mini-mark{ width:13px; height:13px; }
-  .board-wrap{ position:relative; flex:1 1 auto; min-height:0; display:flex; }
-  .board{ display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:minmax(0,1fr); gap:8px; flex:1 1 auto; min-height:0; width:100%; }
+  .board-wrap{ position:relative; flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:center; }
+  .board{ display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:auto; gap:8px; width:100%; }
   .flag{
     position:relative; border-radius:9px; padding:9px 6px 7px; min-height:0; display:flex; flex-direction:column; justify-content:center;
     background:linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.42));
     border:1px solid rgba(0,0,0,.35);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.04);
     transition:box-shadow .2s, border-color .2s, transform .15s, opacity .2s;
-    cursor:pointer;
+    cursor:pointer; aspect-ratio:1.35;
   }
   .flag .badge{
     position:absolute; top:-9px; left:50%; transform:translateX(-50%); z-index:2;
@@ -508,7 +529,7 @@
   @keyframes confirmbtn-pulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.06); } }
   .handbar .rail{ position:absolute; left:0; right:0; bottom:0; height:6px;
     background:linear-gradient(180deg, var(--rail-hi), var(--rail)); box-shadow:0 -1px 0 rgba(255,255,255,.08); }
-  .hand{ position:absolute; left:50%; bottom:24px; width:0; height:var(--card-h); }
+  .hand{ position:absolute; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); width:0; height:var(--card-h); }
   .hand .pcard{
     position:absolute; left:calc(var(--card-w) / -2); top:0; pointer-events:auto; cursor:grab; touch-action:none;
     transition:transform .32s cubic-bezier(.2,.8,.2,1), opacity .25s, box-shadow .2s;
@@ -1032,6 +1053,9 @@ const SFX={
   comboTime(){ [0,90].forEach((d,i)=>setTimeout(()=>tone(988+i*220,0.12,{type:'sine',vol:0.12,slideTo:1400+i*220}),d)); },
 };
 function playSfx(name){ try{ if(SFX[name]) SFX[name](); }catch(e){} }
+function track(eventName, params){
+  try{ if(typeof gtag==='function') gtag('event', eventName, params||{}); }catch(e){}
+}
 const BGM_CHORDS=[
   {root:261.6, third:329.6, fifth:392.0}, // C
   {root:220.0, third:261.6, fifth:329.6}, // Am
@@ -2064,12 +2088,12 @@ function resolveFusion(){
   const lo = cardA.value<=cardB.value ? cardA : cardB;
   const hi = cardA.value<=cardB.value ? cardB : cardA;
   const overflow = lo.value + hi.value - 10;
-  const newHi={kind:'troop', color:hi.color, altColor:hi.altColor, mixed:hi.mixed, value:10, uid:hi.uid};
+  const newHi={kind:'troop', color:hi.color, altColor:hi.altColor, mixed:hi.mixed, value:10, uid:hi.uid, origValue: hi.origValue!==undefined?hi.origValue:hi.value};
   const idxHi=hand.indexOf(hi);
   hand[idxHi]=newHi;
   let hintMsg;
   if(overflow>=1){
-    const newLo={kind:'troop', color:lo.color, altColor:lo.altColor, mixed:lo.mixed, value:overflow, uid:lo.uid};
+    const newLo={kind:'troop', color:lo.color, altColor:lo.altColor, mixed:lo.mixed, value:overflow, uid:lo.uid, origValue: lo.origValue!==undefined?lo.origValue:lo.value};
     const idxLo=hand.indexOf(lo);
     hand[idxLo]=newLo;
     hintMsg=`融合！${CNAME[lo.color]}${overflow}と${CNAME[hi.color]}10に分裂した。`;
@@ -2314,7 +2338,10 @@ function useInspire(handIdx){
   busy=true;
   const used=hand.splice(handIdx,1)[0]; graveyard.push(used);
   hand.forEach(c=>{
-    if(c.kind==='troop' || (c.kind==='monster' && (c.sub==='number'||c.sub==='combined'))) c.value=Math.min(10, c.value+3);
+    if(c.kind==='troop' || (c.kind==='monster' && (c.sub==='number'||c.sub==='combined'))){
+      if(c.origValue===undefined) c.origValue=c.value;
+      c.value=Math.min(10, c.value+3);
+    }
   });
   advanceTurn(used);
   const refilled=autoRefill(1);
@@ -2990,6 +3017,16 @@ function showEnd(reason){
   render();
   bestTotal=Math.max(bestTotal,totalScore);
   saveHighScore(CHARACTER.id, bestTotal);
+  track(reason==='finalvictory' ? 'game_victory' : 'game_over', {
+    character: CHARACTER.id,
+    character_name: CHARACTER.name,
+    reason: reason || 'timeup',
+    stage: stageIndex+1,
+    wave: waveAttempt,
+    score: totalScore,
+    best_score: bestTotal,
+    immortal_kills: immortalKills
+  });
   const grEl=document.getElementById('finalGrade');
   grEl.classList.remove('victory','defeat','wavename');
   try{
@@ -3108,6 +3145,14 @@ function resolveRewardPick(opt){
     else advanceToNextStage();
   }, 450);
 }
+function decayModifiedCards(cards){
+  cards.forEach(c=>{
+    if(c.origValue!==undefined && Math.random()<0.4){
+      c.value=c.origValue;
+      delete c.origValue;
+    }
+  });
+}
 function advanceWaveAttempt(){
   waveAttempt++;
   score=0; displayedScore=0;
@@ -3116,6 +3161,8 @@ function advanceWaveAttempt(){
   const persistent = activeDeck.filter(c=>c.purchased);
   const toRecycle = activeDeck.filter(c=>!c.purchased);
   const recyclable = graveyard.filter(c=>!(c.kind==='monster' && c.sub==='combined') && !c.purchased);
+  decayModifiedCards(toRecycle);
+  decayModifiedCards(recyclable);
   grandDeck.push(...toRecycle, ...recyclable);
   activeDeck=persistent;
   graveyard=[];
@@ -3149,9 +3196,12 @@ function advanceToNextStage(){
   const handToRecycle = hand.filter(c=>!c.purchased);
   graveyard.push(...handToRecycle);
   hand=[];
+  decayModifiedCards(handPersistent);
   const persistent = activeDeck.filter(c=>c.purchased).concat(handPersistent);
   const toRecycle = activeDeck.filter(c=>!c.purchased);
   const recyclable = graveyard.filter(c=>!(c.kind==='monster' && c.sub==='combined') && !c.purchased);
+  decayModifiedCards(toRecycle);
+  decayModifiedCards(recyclable);
   grandDeck.push(...toRecycle, ...recyclable);
   activeDeck=persistent;
   graveyard=[];
@@ -3490,6 +3540,7 @@ function buildCharList(){
     el.innerHTML=`<div class="char-hs">ベスト ${chScore}</div><div class="char-name">◆ ${ch.name}<small>${ch.rank}</small></div><div class="char-desc">${ch.desc}</div>`;
     el.onclick=()=>{
       CHARACTER=ch;
+      track('character_select', {character:ch.id, character_name:ch.name});
       document.getElementById('charScreen').style.display='none';
       document.getElementById('appRoot').style.display='';
       init();

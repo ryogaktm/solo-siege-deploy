@@ -6,6 +6,16 @@
 
 - `index.html` … ゲーム本体（このファイル1つで完結）
 - `vercel.json` … Vercel用の設定（無くても動きますが、URLを綺麗にするために同梱）
+- `manifest.json` / `icon-*.png` / `favicon-32.png` … ホーム画面追加・PWA用のアイコン一式
+- `ga-config.js` … Google Analytics（GA4）の測定IDを管理する設定ファイル
+
+## GA測定IDを変更したい時
+
+`index.html` は触らず、`ga-config.js` の中の1行だけ書き換えてpushすればOKです。
+
+```js
+window.GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';
+```
 
 ## GitHubにアップロードする手順
 
