@@ -7,6 +7,7 @@
 - `index.html` … ゲーム本体（このファイル1つで完結）
 - `vercel.json` … Vercel用の設定（無くても動きますが、URLを綺麗にするために同梱）
 - `manifest.json` / `icon-*.png` / `favicon-32.png` … ホーム画面追加・PWA用のアイコン一式
+- `ogp-1200x630.png` … X/LINEなどでURLをシェアした時のプレビュー画像
 - `ga-config.js` … Google Analytics（GA4）の測定IDを管理する設定ファイル
 
 ## GA測定IDを変更したい時
